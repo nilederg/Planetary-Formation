@@ -1,3 +1,0 @@
-	1. Spherical perlin noise
-Generate 3d perlin noise
-Sample points along the noise 

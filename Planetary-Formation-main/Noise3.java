@@ -7,8 +7,7 @@ public class Noise3 {
     // Set dimensions
     dimensions = dims.clone();
     // Initialize vector array dimensions
-    Vector[][][] vecs = new Vector[(int) dims.vals[0]][(int) dims.vals[1]][(int) dims.vals[2]];
-    vectors = vecs;
+    vectors = new Vector[(int) dims.vals[0]][(int) dims.vals[1]][(int) dims.vals[2]];
     // Initialize individual vectors (everything starts at 0)
     for (int x = 0; x < dimensions.vals[0]; x++) {
       for (int y = 0; y < dimensions.vals[1]; y++) {

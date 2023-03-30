@@ -1,10 +1,11 @@
+package Positionals;
 // A 3d vector class for assisting perlin noise
 import java.util.Random; // random
 
 // add, dotProduct, getRel, randomize, randomizeUnit, 
 
-public class Vector {
-  double[] vals; // {x, y, z}
+class Vector {
+  private double[] vals; // {x, y, z}
 
   // Initialization with value input
   public Vector(double[] values) {
@@ -119,5 +120,39 @@ public class Vector {
   public void floor() {
     for (int i = 0; i < 3; i++)
       this.vals[i] = Math.floor(this.vals[i]);
+  }
+
+  // Getters and Setters
+
+  public double[] getVals() {
+    return vals;
+  }
+
+  public void setVals(double[] vals) {
+    this.vals = vals;
+  }
+
+  public double getX() {
+    return vals[1];
+  }
+
+  public double getY() {
+    return vals[1];
+  }
+
+  public double getZ() {
+    return vals[1];
+  }
+
+  public void setX(double x) {
+    this.vals[0] = x;
+  }
+
+  public void setY(double y) {
+    this.vals[1] = y;
+  }
+
+  public void setZ(double z) {
+    this.vals[2] = z;
   }
 }

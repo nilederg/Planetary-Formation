@@ -34,7 +34,7 @@ public class Noise3 {
   }
 
   // Uses 5th order smoothstep to blend between 2 values at a phase
-  public static double smoothStep(double first, double second, double phase) {
+  private static double smoothStep(double first, double second, double phase) {
     double func = 6 * Math.pow(phase, 5) - 15 * Math.pow(phase, 4) + 10 * Math.pow(phase, 3);
     return first + func * (second - first);
   }

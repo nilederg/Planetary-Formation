@@ -4,36 +4,35 @@ import java.util.Random; // random
 
 // add, dotProduct, getRel, randomize, randomizeUnit, 
 
-class Vector {
+class Vector3 {
   private double[] vals; // {x, y, z}
 
   // Initialization with value input
-  public Vector(double[] values) {
+  public Vector3(double[] values) {
     this.vals = values;
   }
 
   // Initialization without value input (overload)
-  public Vector() {
-    double[] values = { 0, 0, 0 };
-    this.vals = values;
+  public Vector3() {
+    this.vals = new double[]{ 0, 0, 0 };
   }
 
   // Returns a clone of this vector
-  public Vector clone() {
-    Vector out = new Vector();
-    for (int i = 0; i < 3; i++)
-      out.vals[i] = this.vals[i];
+  @Override
+  public Vector3 clone() {
+    Vector3 out = new Vector3();
+    System.arraycopy(this.vals, 0, out.vals, 0, 3);
     return out;
   }
 
   // Adds an input vector to this vector and stores the result in this vector
-  public void add(Vector vec) {
+  public void add(Vector3 vec) {
     for (int i = 0; i < 3; i++)
       this.vals[i] += vec.vals[i];
   }
 
   // Dot product of this vector and an input vector
-  public double dotProduct(Vector vec) {
+  public double dotProduct(Vector3 vec) {
     double sum = 0;
     for (int i = 0; i < 3; i++)
       sum += this.vals[i] * vec.vals[i];
@@ -42,8 +41,8 @@ class Vector {
 
   // Gets relative pos of input (offset) vector to this (base) vector
   // (vec - this)
-  public Vector getRel(Vector vec) {
-    Vector outVec = new Vector();
+  public Vector3 getRel(Vector3 vec) {
+    Vector3 outVec = new Vector3();
     for (int i = 0; i < 3; i++)
       outVec.vals[i] = vec.vals[i] - this.vals[i];
     return outVec;

@@ -1,10 +1,10 @@
 package Positionals;
 
 public class Particle {
-  Vector position; // Meters from origin
-  Vector velocity; // Meters/sec
-  double radius; // Meters
-  double mass; // Kg
+  protected Vector3 position; // Meters from origin
+  protected Vector3 velocity; // Meters/sec
+  protected double radius; // Meters
+  protected double mass; // Kg
   // 1 distance away and 1 mass, should produce 1 force
   void applyForce(double force, double interval) {
     // 1 force at 1 interval produces 1 distance change

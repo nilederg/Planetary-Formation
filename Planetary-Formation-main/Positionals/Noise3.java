@@ -1,36 +1,30 @@
 package Positionals;
 
 public class Noise3 {
-  private Vector[][][] vectors;
-  public Vector dimensions;
+  private Vector3[][][] vectors;
+  public final int[] dimensions;
 
   // Initialize with custom dimensions
-  public Noise3(Vector dims) {
+  public Noise3(int[] dims) {
     // Set dimensions
     dimensions = dims.clone();
     // Initialize vector array dimensions
-    vectors = new Vector[(int) dims.getVals()[0]][(int) dims.getVals()[1]][(int) dims.getVals()[2]];
+    vectors = new Vector3[(int) dims[0]][(int) dims[1]][(int) dims[2]];
     // Initialize individual vectors (everything starts at 0)
-    for (int x = 0; x < dimensions.getVals()[0]; x++) {
-      for (int y = 0; y < dimensions.getVals()[1]; y++) {
-        for (int z = 0; z < dimensions.getVals()[2]; z++) {
-          vectors[x][y][z] = new Vector();
-        }
-      }
-    }
+    for (int x = 0; x < dimensions[0]; x++)
+      for (int y = 0; y < dimensions[1]; y++)
+        for (int z = 0; z < dimensions[2]; z++)
+          vectors[x][y][z] = new Vector3();
   }
 
   // Randomizes the internal vectors
   public void randomize() {
     // i wonder if there's a way to get rid of redundant recursive similar for loops
     // without using something crazy like lambdas
-    for (int x = 0; x < dimensions.getVals()[0]; x++) {
-      for (int y = 0; y < dimensions.getVals()[1]; y++) {
-        for (int z = 0; z < dimensions.getVals()[2]; z++) {
+    for (int x = 0; x < dimensions[0]; x++)
+      for (int y = 0; y < dimensions[1]; y++)
+        for (int z = 0; z < dimensions[2]; z++)
           vectors[x][y][z].randomizeUnit();
-        }
-      }
-    }
   }
 
   // Uses 5th order smoothstep to blend between 2 values at a phase
@@ -43,23 +37,23 @@ public class Noise3 {
   // point vector
   // Vector corner is a position in space that has a vector at its position - it
   // is not the vector itself
-  private double getDotSingle(Vector point, Vector corner) {
+  private double getDotSingle(Vector3 point, Vector3 corner) {
     // Get vector to multiply by
-    Vector base = this.vectors[(int) corner.getVals()[0]][(int) corner.getVals()[1]][(int) corner.getVals()[2]];
+    Vector3 base = this.vectors[(int) corner.getVals()[0]][(int) corner.getVals()[1]][(int) corner.getVals()[2]];
     // Point relative to corner
-    Vector offset = corner.getRel(point);
+    Vector3 offset = corner.getRel(point);
     double output = base.dotProduct(offset);
     return output;
   }
 
   // Calculates value at a point
-  public double getPoint(Vector point) {
-    Vector base = point.clone(); // Floored point
+  public double getPoint(Vector3 point) {
+    Vector3 base = point.clone(); // Floored point
     base.floor();
 
     // Eliminate redundancy by creating redundancy.
-    Vector offset = new Vector();
-    Vector phase = base.getRel(point);
+    Vector3 offset = new Vector3();
+    Vector3 phase = base.getRel(point);
     double[] xBases = { 0, 0 }; // For interpolation
 
     for (int xOff = 0; xOff <= 1; xOff++) {
@@ -78,7 +72,7 @@ public class Noise3 {
           offset.add(base);
 
           // Use vector to lookup other vector in a 3d array
-          Vector gradientVec = new Vector();
+          Vector3 gradientVec = new Vector3();
           double[] values = vectors[(int) offset.getVals()[0]][(int) offset.getVals()[1]][(int) offset.getVals()[2]].getVals();
           gradientVec.setVals(values);
           // Store the two values to an array

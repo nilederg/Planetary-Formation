@@ -1,6 +1,6 @@
 package Positionals;
 
-public class Particle {
+public class Particle{
   Vector position; // Meters from origin
   Vector velocity; // Meters/sec
   double radius; // Meters

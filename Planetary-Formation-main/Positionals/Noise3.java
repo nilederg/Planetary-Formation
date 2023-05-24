@@ -1,5 +1,3 @@
-package Positionals;
-
 public class Noise3 {
   private Vector[][][] vectors;
   public Vector dimensions;
@@ -9,11 +7,11 @@ public class Noise3 {
     // Set dimensions
     dimensions = dims.clone();
     // Initialize vector array dimensions
-    vectors = new Vector[(int) dims.getVals()[0]][(int) dims.getVals()[1]][(int) dims.getVals()[2]];
+    vectors = new Vector[(int) dims.vals[0]][(int) dims.vals[1]][(int) dims.vals[2]];
     // Initialize individual vectors (everything starts at 0)
-    for (int x = 0; x < dimensions.getVals()[0]; x++) {
-      for (int y = 0; y < dimensions.getVals()[1]; y++) {
-        for (int z = 0; z < dimensions.getVals()[2]; z++) {
+    for (int x = 0; x < dimensions.vals[0]; x++) {
+      for (int y = 0; y < dimensions.vals[1]; y++) {
+        for (int z = 0; z < dimensions.vals[2]; z++) {
           vectors[x][y][z] = new Vector();
         }
       }
@@ -24,9 +22,9 @@ public class Noise3 {
   public void randomize() {
     // i wonder if there's a way to get rid of redundant recursive similar for loops
     // without using something crazy like lambdas
-    for (int x = 0; x < dimensions.getVals()[0]; x++) {
-      for (int y = 0; y < dimensions.getVals()[1]; y++) {
-        for (int z = 0; z < dimensions.getVals()[2]; z++) {
+    for (int x = 0; x < dimensions.vals[0]; x++) {
+      for (int y = 0; y < dimensions.vals[1]; y++) {
+        for (int z = 0; z < dimensions.vals[2]; z++) {
           vectors[x][y][z].randomizeUnit();
         }
       }
@@ -45,7 +43,7 @@ public class Noise3 {
   // is not the vector itself
   private double getDotSingle(Vector point, Vector corner) {
     // Get vector to multiply by
-    Vector base = this.vectors[(int) corner.getVals()[0]][(int) corner.getVals()[1]][(int) corner.getVals()[2]];
+    Vector base = this.vectors[(int) corner.vals[0]][(int) corner.vals[1]][(int) corner.vals[2]];
     // Point relative to corner
     Vector offset = corner.getRel(point);
     double output = base.dotProduct(offset);
@@ -69,29 +67,26 @@ public class Noise3 {
         double[] zBases = { 0, 0 }; // For interpolation
 
         for (int zOff = 0; zOff <= 1; zOff++) {
-          // yes I know this is redundant
-          // but the alternative is replacing all '*off's
-          // with a list, and that would look so ugly
-          offset.setX(xOff);
-          offset.setY(yOff);
-          offset.setZ(zOff);
+          offset.vals[0] = xOff; // yes i know this is redundant
+          offset.vals[1] = yOff; // but the alternative is replacing all '*off's
+          offset.vals[2] = zOff; // with a list, and that would look so ugly
           offset.add(base);
 
           // Use vector to lookup other vector in a 3d array
           Vector gradientVec = new Vector();
-          double[] values = vectors[(int) offset.getVals()[0]][(int) offset.getVals()[1]][(int) offset.getVals()[2]].getVals();
-          gradientVec.setVals(values);
+          double[] values = vectors[(int) offset.vals[0]][(int) offset.vals[1]][(int) offset.vals[2]].vals;
+          gradientVec.vals = values;
           // Store the two values to an array
           zBases[zOff] = getDotSingle(point, offset);
         }
         // Interpolate between the two z corners at the z value
-        yBases[yOff] = smoothStep(zBases[0], zBases[1], phase.getVals()[2]);
+        yBases[yOff] = smoothStep(zBases[0], zBases[1], phase.vals[2]);
       }
       // Interpolate between the two y points at the y value
-      xBases[xOff] = smoothStep(yBases[0], yBases[1], phase.getVals()[1]);
+      xBases[xOff] = smoothStep(yBases[0], yBases[1], phase.vals[1]);
     }
     // Interpolate between the two x points at the x value
-    return smoothStep(xBases[0], xBases[1], phase.getVals()[0]);
+    return smoothStep(xBases[0], xBases[1], phase.vals[0]);
     // hold up is this code unreadable (oh no)
     // my whitespace looks goofy
   }

@@ -1,3 +1,7 @@
+package Storage;
+
+import Storage.Positionals.Vector2;
+
 // A recursive field that stores a grid of scalars
 public class ScalarQuadTree {
     private final ScalarQuadTree parent;
@@ -29,23 +33,25 @@ public class ScalarQuadTree {
     }
 
     // Returns the child node that would contain those coordinates
-    protected ScalarQuadTree relevantChild(double x, double y) {
+    protected ScalarQuadTree relevantChild(Vector2 point) {
         // children[0][.] if x < 0.5, children[1][.] otherwise. Same for y.
-        return this.children[(x < 0.5) ? 0 : 1][(y < 0.5) ? 0 : 1];
+        return this.children[(point.getX() < 0.5) ? 0 : 1][(point.getY() < 0.5) ? 0 : 1];
     }
 
-    protected ScalarQuadTree getLeafNode(double x, double y) {
+    protected ScalarQuadTree getLeafNode(Vector2 point) {
         if (this.leafNode)
             return this;
 
-        return relevantChild(x, y).getLeafNode(2 * x % 1, 2 * y % 1);
+        Vector2 leafPoint = point.clone();
+        leafPoint.mutateWithLambda((x) -> (2 * x % 1));
+
+        return relevantChild(point).getLeafNode(point);
     }
 
-    public double getPoint(double x, double y) {
-        if (this.leafNode)
-            return data.getPoint(x, y);
+    public double getPoint(Vector2 point) {
+        ScalarQuadTree leafNode = getLeafNode(point);
 
-        return relevantChild(x, y).getPoint(2 * x % 1, 2 * y % 1);
+        return leafNode.data.getPoint(point);
     }
 
 

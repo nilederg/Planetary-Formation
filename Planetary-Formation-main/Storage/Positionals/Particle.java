@@ -1,4 +1,4 @@
-package Positionals;
+package Storage.Positionals;
 
 public class Particle {
   protected Vector3 position; // Meters from origin

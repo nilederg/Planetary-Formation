@@ -1,4 +1,4 @@
-package Positionals;
+package Storage.Positionals;
 
 public class Noise3 {
   private Vector3[][][] vectors;

@@ -84,6 +84,7 @@ public class ScalarSphere {
                 return operation.mutate(location, value);
             };
             faces[i].mutateLocal(localOperation);
+            // TODO define localOperation
         }
     }
 }

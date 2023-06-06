@@ -5,7 +5,7 @@ import Storage.Positionals.Vector3;
 import Storage.Positionals.GeoCoord;
 
 public class ScalarSphere {
-    private ScalarQuadTree faces[]; // R(ight) L F B U D
+    private final ScalarQuadTree[] faces; // R(ight) L F B U D
 
     ScalarSphere() {
         faces = new ScalarQuadTree[]{new ScalarQuadTree(null, 3)};
@@ -15,15 +15,18 @@ public class ScalarSphere {
     public ScalarQuadTree getFace(GeoCoord point) {
         Vector3 location = Vector3.fromSphericalCoordinates(point);
         switch (location.largestComponent()) {
-            case 0:
+            case 0 -> {
                 return location.getX() >= 0 ?
                         faces[0] : faces[1];
-            case 1:
+            }
+            case 1 -> {
                 return location.getY() >= 0 ?
                         faces[0] : faces[1];
-            case 2:
+            }
+            case 2 -> {
                 return location.getZ() >= 0 ?
                         faces[0] : faces[1];
+            }
         }
         throw new IllegalArgumentException("Case " + location.largestComponent() + " is not a valid dimension index.");
     }
@@ -31,12 +34,15 @@ public class ScalarSphere {
     private Vector2 getPointOnFace(Vector3 cubicVector) {
         cubicVector.normalizeCube();
         switch (cubicVector.largestComponent()) {
-            case 0:
+            case 0 -> {
                 return new Vector2(new double[]{cubicVector.getY() / 2 + 0.5, cubicVector.getZ() / 2 + 0.5});
-            case 1:
+            }
+            case 1 -> {
                 return new Vector2(new double[]{cubicVector.getX() / 2 + 0.5, cubicVector.getZ() / 2 + 0.5});
-            case 2:
+            }
+            case 2 -> {
                 return new Vector2(new double[]{cubicVector.getX() / 2 + 0.5, cubicVector.getY() / 2 + 0.5});
+            }
         }
         // Should be an unreachable state
         throw new IllegalArgumentException("Case " + cubicVector.largestComponent() + " is not a valid dimension index.");
@@ -84,7 +90,13 @@ public class ScalarSphere {
                 return operation.mutate(location, value);
             };
             faces[i].mutateLocal(localOperation);
-            // TODO define localOperation
         }
+    }
+
+    public void exportPng(long fileSize) {
+        // TODO implement this feature
+        //      export a png with width:height ratio 2:1
+        //      in equidistant projection
+        //      implement soon so testing can occur
     }
 }

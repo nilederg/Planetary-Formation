@@ -13,8 +13,9 @@ public class ScalarQuadTree {
     // Branch/root note constructor
     ScalarQuadTree(ScalarQuadTree parent, int remainingLevels) {
         this.parent = parent;
+        this.children = new ScalarQuadTree[2][2];
         this.leafNode = false;
-        this.children =  new ScalarQuadTree[2][2];
+        this.data = null;
         if (remainingLevels > 1)
             for (int i = 0; i < 2; i ++)
                 for (int j = 0; j < 2; j ++)
@@ -22,15 +23,17 @@ public class ScalarQuadTree {
         else // remaining levels = 1
             for (int i = 0; i < 2; i ++)
                 for (int j = 0; j < 2; j ++)
-                    this.children[i][j] = new ScalarQuadTree(this);
+                    this.children[i][j] = new ScalarQuadTree(this, new PlanarScalarGrid());
+                    // TODO replace with PlanarScalarCompressedData all 0 class
     }
 
     // Leaf node constructor
     // A node can still change between branch and leaf after construction
-    ScalarQuadTree(ScalarQuadTree parent) {
+    private ScalarQuadTree(ScalarQuadTree parent, PlanarScalarData data) {
         this.parent = parent;
-        this.leafNode = true;
         this.children = null;
+        this.leafNode = true;
+        this.data = data;
     }
 
     // Returns the child node that would contain those coordinates
@@ -55,14 +58,31 @@ public class ScalarQuadTree {
         return leafNode.data.getPoint(point);
     }
 
+    private void split() {
+        // TODO cut leaf node into quarters
+        //      throw exception if not leaf
+    }
+
     @FunctionalInterface
     public interface LocalMutator {
         double mutate(Vector2 point, double value);
     }
 
-    public void mutateLocal(LocalMutator operation, double size) {
+    // Operation is applied to every point
+    public void mutateLocal(LocalMutator operation) {
         if (leafNode) {
-            //
+            data.mutateLocal(operation);
+        } else {
+            for (int i = 0; i < 2; i ++) {
+                for (int j = 0; j < 2; j ++) {
+                    int finalI = i;
+                    int finalJ = j;
+                    children[i][j].mutateLocal((Vector2 point, double value) -> {
+                        double[] coordinates = new double[] {(point.getX() + finalI) / 2, (point.getY() + finalJ) / 2};
+                        return operation.mutate(new Vector2(coordinates), value);
+                    });
+                }
+            }
         }
     }
 }

@@ -20,7 +20,7 @@ public class Vector3 extends Vector {
     output.setX(Math.sin(coordinate.longitude()) * factor);
     output.setY(Math.sin(coordinate.longitude()) * factor);
     return output;
-  }
+  } // TODO optimize with table lookup
 
   // Returns a clone of this vector
   @Override

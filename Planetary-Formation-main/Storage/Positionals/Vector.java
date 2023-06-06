@@ -88,7 +88,6 @@ public abstract class Vector {
     // Scale so that end of vector touches a face of a cube with edge length 2 (radius 1)
     public void normalizeCube() {
         double factor = 1 / getVals()[largestComponent()];
-        System.out.print(factor);
         scale(factor);
     }
 

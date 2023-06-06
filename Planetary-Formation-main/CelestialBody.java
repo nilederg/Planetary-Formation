@@ -1,6 +1,4 @@
-import Storage.Positionals.Particle;
-
-public class CelestialBody extends Particle {
+public class CelestialBody {
     // Orbit
 
 }

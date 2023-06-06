@@ -1,3 +1,3 @@
-public class TerrestrialPlanet extends CelestialBody {
+public class TerrestrialPlanet {
 
 }

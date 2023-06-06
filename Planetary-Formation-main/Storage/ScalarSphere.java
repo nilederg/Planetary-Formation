@@ -4,15 +4,17 @@ import Storage.Positionals.Vector2;
 import Storage.Positionals.Vector3;
 import Storage.Positionals.GeoCoord;
 
+import java.util.function.BiFunction;
+
 public class ScalarSphere {
     private final ScalarQuadTree[] faces; // R(ight) L F B U D
 
-    ScalarSphere() {
-        faces = new ScalarQuadTree[]{new ScalarQuadTree(null, 3)};
+    public ScalarSphere(int resolution) {
+        faces = new ScalarQuadTree[]{new ScalarQuadTree(null, resolution)};
     }
 
     // Returns the face covered by the provided latitude and longitude
-    public ScalarQuadTree getFace(GeoCoord point) {
+    private ScalarQuadTree getFace(GeoCoord point) {
         Vector3 location = Vector3.fromSphericalCoordinates(point);
         switch (location.largestComponent()) {
             case 0 -> {
@@ -48,10 +50,14 @@ public class ScalarSphere {
         throw new IllegalArgumentException("Case " + cubicVector.largestComponent() + " is not a valid dimension index.");
     }
 
-    // Gets the value at any given point
+    // Gets the value at any given point, with a GeoCoord
     public double getPoint(GeoCoord point) {
         Vector3 cubicVector = Vector3.fromSphericalCoordinates(point);
+        return getPoint(cubicVector);
+    }
 
+    // Gets the value at any given point, with a Vector3
+    private double getPoint(Vector3 cubicVector) {
         int largestComponent = cubicVector.largestComponent();
         double largestValue = cubicVector.getVals()[largestComponent];
         ScalarQuadTree tree = largestValue >= 0 ?
@@ -93,10 +99,22 @@ public class ScalarSphere {
         }
     }
 
+    // Input 1 is this, input 2 is inSphere
+    public void biMutate(BiFunction<Double, Double, Double> operator, ScalarSphere inSphere) {
+        mutateSphereLocal((Vector3 point, double value) -> {
+            return operator.apply(value, inSphere.getPoint(point));
+        });
+    }
+
     public void exportPng(long fileSize) {
         // TODO implement this feature
         //      export a png with width:height ratio 2:1
         //      in equidistant projection
         //      implement soon so testing can occur
+    }
+
+    public void exportStl(long filesize) {
+        // TODO implement this feature
+        //      export stereolithography mesh
     }
 }

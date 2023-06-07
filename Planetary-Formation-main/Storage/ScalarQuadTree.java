@@ -78,19 +78,27 @@ public class ScalarQuadTree {
         double mutate(Vector2 point, double value);
     }
 
-    // Operation is applied to every point
-    public void mutateLocal(LocalMutator operation) {
+    @FunctionalInterface
+    public interface ApplicationZone {
+        // Point is point on sphere surface, range is radians distance from point
+        // Returns true if anything within range of point is in the "zone", false otherwise
+        boolean checkWithin(Vector2 point, double range);
+    }
+
+    // Operation is applied to every point within zone
+    public void mutateLocal(LocalMutator operation, ApplicationZone zone, double size, Vector2 position) {
         if (leafNode) {
             data.mutateLocal(operation);
         } else {
             for (int i = 0; i < 2; i ++) {
                 for (int j = 0; j < 2; j ++) {
                     int finalI = i;
-                    int finalJ = j;
+
+                    // TODO Rework to cut down on lambdas
                     children[i][j].mutateLocal((Vector2 point, double value) -> {
                         double[] coordinates = new double[] {(point.getX() + finalI) / 2, (point.getY() + finalJ) / 2};
                         return operation.mutate(new Vector2(coordinates), value);
-                    });
+                    }, zone, size / 2, position.add());
                 }
             }
         }

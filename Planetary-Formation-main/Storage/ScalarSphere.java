@@ -67,15 +67,39 @@ public class ScalarSphere {
     }
 
     @FunctionalInterface
-    public interface LocalSphereMutator {
+    public interface SphereMutation {
         double mutate(Vector3 point, double value);
+    }
+
+    @FunctionalInterface
+    public interface SphereApplicationZone {
+        // Point is point on sphere surface, range is radians distance from point
+        // Returns true if anything within range of point is in the "zone", false otherwise
+        boolean checkWithin(Vector3 point, double range);
+    }
+
+    private static Vector3 faceCenter(int face) {
+        switch (face) {
+            case 0: return new Vector3(new double[] {-1, 0, 0});
+            case 1: return new Vector3(new double[] { 1, 0, 0});
+            case 2: return new Vector3(new double[] {0, -1, 0});
+            case 3: return new Vector3(new double[] {0,  1, 0});
+            case 4: return new Vector3(new double[] {0, 0, -1});
+            case 5: return new Vector3(new double[] {0, 0,  1});
+        }
+        throw new IllegalArgumentException("Face must be an integer between 0 and 6.");
     }
 
     // Evaluates a lambda, mutating the value at every point on the sphere
     // Lambda takes in its own geographic position and outputs its new value
-    public void mutateSphereLocal(LocalSphereMutator operation) {
+    // Efficiency improved by only running on necessary regions with ApplicationZone
+    public void mutateSphereLocal(SphereMutation operation, SphereApplicationZone zone) {
         for (int i = 0; i < 6; i ++) {
             int finalI = i;
+            // 1 radian is actually very close to the maximum distance from center here, and it's easier on the computer
+            if (!zone.checkWithin(faceCenter(i), 1))
+                continue;
+            // Only mutate if within zone
             ScalarQuadTree.LocalMutator localOperation = (Vector2 point, double value) -> {
                 Vector3 location = null;
                 switch (finalI) {
@@ -103,7 +127,7 @@ public class ScalarSphere {
     public void biMutate(BiFunction<Double, Double, Double> operator, ScalarSphere inSphere) {
         mutateSphereLocal((Vector3 point, double value) -> {
             return operator.apply(value, inSphere.getPoint(point));
-        });
+        }, (Vector3 point, double range) -> {return true;});
     }
 
     public void exportPng(long fileSize) {

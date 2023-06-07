@@ -5,6 +5,9 @@ import java.util.Random;
 public abstract class Vector {
     protected double[] vals;
 
+    public abstract Vector clone();
+    public abstract Vector getRel(Vector a);
+
     // Adds an input vector to this vector and stores the result in this vector
     public void add(Vector vec) {
         for (int i = 0; i < getVals().length; i++)

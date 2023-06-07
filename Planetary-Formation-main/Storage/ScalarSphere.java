@@ -90,6 +90,26 @@ public class ScalarSphere {
         throw new IllegalArgumentException("Face must be an integer between 0 and 6.");
     }
 
+    private static Vector3 placeFace(Vector2 point, int face) {
+        Vector3 location = null;
+        switch (face) {
+            case 0:
+                location = new Vector3(new double[] {-1, point.getX() * 2 - 1, point.getY() * 2 - 1});
+            case 1:
+                location = new Vector3(new double[] { 1, point.getX() * 2 - 1, point.getY() * 2 - 1});
+            case 2:
+                location = new Vector3(new double[] {point.getX() * 2 - 1, -1, point.getY() * 2 - 1});
+            case 3:
+                location = new Vector3(new double[] {point.getX() * 2 - 1,  1, point.getY() * 2 - 1});
+            case 4:
+                location = new Vector3(new double[] {point.getX() * 2 - 1, point.getY() * 2 - 1, -1});
+            case 5:
+                location = new Vector3(new double[] {point.getX() * 2 - 1, point.getY() * 2 - 1,  1});
+        }
+        location.normalize();
+        return location;
+    }
+
     // Evaluates a lambda, mutating the value at every point on the sphere
     // Lambda takes in its own geographic position and outputs its new value
     // Efficiency improved by only running on necessary regions with ApplicationZone
@@ -101,25 +121,12 @@ public class ScalarSphere {
                 continue;
             // Only mutate if within zone
             ScalarQuadTree.LocalMutator localOperation = (Vector2 point, double value) -> {
-                Vector3 location = null;
-                switch (finalI) {
-                    case 0:
-                        location = new Vector3(new double[] {-1, point.getX() * 2 - 1, point.getY() * 2 - 1});
-                    case 1:
-                        location = new Vector3(new double[] { 1, point.getX() * 2 - 1, point.getY() * 2 - 1});
-                    case 2:
-                        location = new Vector3(new double[] {point.getX() * 2 - 1, -1, point.getY() * 2 - 1});
-                    case 3:
-                        location = new Vector3(new double[] {point.getX() * 2 - 1,  1, point.getY() * 2 - 1});
-                    case 4:
-                        location = new Vector3(new double[] {point.getX() * 2 - 1, point.getY() * 2 - 1, -1});
-                    case 5:
-                        location = new Vector3(new double[] {point.getX() * 2 - 1, point.getY() * 2 - 1,  1});
-                }
-                location.normalize();
-                return operation.mutate(location, value);
+                return operation.mutate(placeFace(point, finalI), value);
             };
-            faces[i].mutateLocal(localOperation);
+            ScalarQuadTree.ApplicationZone localZone = (Vector2 point, double range) -> {
+                return zone.checkWithin(placeFace(point, finalI), range);
+            };
+            faces[i].mutateLocal(localOperation, localZone, 1, new Vector2(new double[] {0, 0}));
         }
     }
 

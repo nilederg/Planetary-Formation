@@ -1,7 +1,6 @@
 package Storage;
 
 import Storage.Positionals.Vector2;
-import Storage.Positionals.Vector3;
 
 // A recursive field that stores a grid of scalars
 public class ScalarQuadTree {
@@ -87,18 +86,22 @@ public class ScalarQuadTree {
 
     // Operation is applied to every point within zone
     public void mutateLocal(LocalMutator operation, ApplicationZone zone, double size, Vector2 position) {
+        if (zone.checkWithin(Vector2.sum(position, new Vector2(new double[] {size / 2, size / 2})), size)) {
+            System.out.println(position.getX() + " " + position.getY() + ", " + "Skipped at" + size);
+            return;
+        }
         if (leafNode) {
-            data.mutateLocal(operation);
+            data.mutateLocal((Vector2 point, double value) -> {
+                double x = point.getX() * size + position.getX();
+                double y = point.getY() * size + position.getY();
+                if (x > 1 || y > 1) throw new IllegalArgumentException("x or y greater than 1");
+                return operation.mutate(new Vector2(new double[] {x, y}), value);
+            });
         } else {
             for (int i = 0; i < 2; i ++) {
                 for (int j = 0; j < 2; j ++) {
-                    int finalI = i;
-
-                    // TODO Rework to cut down on lambdas
-                    children[i][j].mutateLocal((Vector2 point, double value) -> {
-                        double[] coordinates = new double[] {(point.getX() + finalI) / 2, (point.getY() + finalJ) / 2};
-                        return operation.mutate(new Vector2(coordinates), value);
-                    }, zone, size / 2, position.add());
+                    Vector2 offset = new Vector2(new double[] {size * i / 2, size * j / 2});
+                    children[i][j].mutateLocal(operation, zone, size / 2, Vector2.sum(position, offset));
                 }
             }
         }

@@ -8,9 +8,35 @@ import java.util.function.BiFunction;
 
 public class ScalarSphere {
     private final ScalarQuadTree[] faces; // R(ight) L F B U D
+    public final long memory;
 
-    public ScalarSphere(int resolution) {
-        faces = new ScalarQuadTree[]{new ScalarQuadTree(null, resolution)};
+    public ScalarSphere(int resolution, long maxRAM) {
+        memory = (long)Math.pow(4, resolution) * 266240 * 6;
+        if (memory > maxRAM)
+            throw new OutOfMemoryError("Insufficient available memory to initialize " + memoryString() + " sphere.");
+        System.out.println("Building a sphere - Approximate memory allocation: " + memoryString());
+        this.faces = new ScalarQuadTree[6];
+        for (int i = 0; i < 6; i ++) {
+            System.out.println("Initializing face " + i);
+            this.faces[i] = new ScalarQuadTree(null, resolution);
+        }
+        System.out.println(memoryString() + " Sphere initialized");
+    }
+
+    private String round(double value, double precision) {
+        return Long.toString((long)value) + "." + (int)((value % 1) * 10);
+    }
+
+    public String memoryString() {
+        if (memory > 1099511627776L)
+            return round(memory / 1099511627776.0, 0.1) + " TiB";
+        if (memory > 1073741824L)
+            return round(memory / 1073741824.0, 0.1) + " GiB";
+        if (memory > 1048576L)
+            return round(memory / 1048576.0, 0.1) + " MiB";
+        if (memory > 1024L)
+            return round(memory / 1024.0, 0.1) + " KiB";
+        return memory + " B";
     }
 
     // Returns the face covered by the provided latitude and longitude
@@ -80,12 +106,12 @@ public class ScalarSphere {
 
     private static Vector3 faceCenter(int face) {
         switch (face) {
-            case 0: return new Vector3(new double[] {-1, 0, 0});
-            case 1: return new Vector3(new double[] { 1, 0, 0});
-            case 2: return new Vector3(new double[] {0, -1, 0});
-            case 3: return new Vector3(new double[] {0,  1, 0});
-            case 4: return new Vector3(new double[] {0, 0, -1});
-            case 5: return new Vector3(new double[] {0, 0,  1});
+            case 0 -> {return new Vector3(new double[]{-1, 0, 0});}
+            case 1 -> {return new Vector3(new double[]{ 1, 0, 0});}
+            case 2 -> {return new Vector3(new double[]{0, -1, 0});}
+            case 3 -> {return new Vector3(new double[]{0,  1, 0});}
+            case 4 -> {return new Vector3(new double[]{0, 0, -1});}
+            case 5 -> {return new Vector3(new double[]{0, 0,  1});}
         }
         throw new IllegalArgumentException("Face must be an integer between 0 and 6.");
     }
@@ -106,6 +132,7 @@ public class ScalarSphere {
             case 5:
                 location = new Vector3(new double[] {point.getX() * 2 - 1, point.getY() * 2 - 1,  1});
         }
+        assert location != null;
         location.normalize();
         return location;
     }
@@ -116,6 +143,7 @@ public class ScalarSphere {
     public void mutateSphereLocal(SphereMutation operation, SphereApplicationZone zone) {
         for (int i = 0; i < 6; i ++) {
             int finalI = i;
+            System.out.println("Face " + i + " mutated");
             // 1 radian is actually very close to the maximum distance from center here, and it's easier on the computer
             if (!zone.checkWithin(faceCenter(i), 1))
                 continue;
@@ -144,8 +172,12 @@ public class ScalarSphere {
         //      implement soon so testing can occur
     }
 
-    public void exportStl(long filesize) {
-        // TODO implement this feature
-        //      export stereolithography mesh
+    /*private class stlTriangle {
+        private Vector3 normal;
+        private Vector3[] vertices;
     }
+
+    public void exportStl() {
+        // Header and total tri count
+    }*/
 }

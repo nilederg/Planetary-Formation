@@ -39,6 +39,13 @@ public class Vector3 extends Vector {
     return output;
   }
 
+  public static Vector3 crossProduct(Vector3 vecA, Vector3 vecB) {
+    double x = (vecA.getY() * vecB.getZ()) -(vecA.getZ() * vecB.getY());
+    double y = (vecA.getZ() * vecB.getX()) -(vecA.getX() * vecB.getZ());
+    double z = (vecA.getX() * vecB.getY()) -(vecA.getY() * vecB.getX());
+    return new Vector3(new double[] {x, y, z});
+  }
+
   // Gets relative pos of input (offset) vector to this (base) vector
   // (vec - this)
   public Vector3 getRel(Vector vec) {

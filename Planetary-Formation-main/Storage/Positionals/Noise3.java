@@ -39,7 +39,10 @@ public class Noise3 {
   // is not the vector itself
   private double getDotSingle(Vector3 point, Vector3 corner) {
     // Get vector to multiply by
-    Vector3 base = this.vectors[(int) corner.getVals()[0]][(int) corner.getVals()[1]][(int) corner.getVals()[2]];
+    int posX = Math.min((int) corner.getX(), dimensions[0] - 1);
+    int posY = Math.min((int) corner.getY(), dimensions[1] - 1);
+    int posZ = Math.min((int) corner.getZ(), dimensions[2] - 1);
+    Vector3 base = vectors[posX][posY][posZ];
     // Point relative to corner
     Vector3 offset = corner.getRel(point);
     double output = base.dotProduct(offset);
@@ -47,7 +50,15 @@ public class Noise3 {
   }
 
   // Calculates value at a point
-  public double getPoint(Vector3 point) {
+  public double getPoint(Vector3 inPoint) {
+    Vector3 point = inPoint.clone();
+    if (point.getX() >= dimensions[0] - 1)
+      point.setX(dimensions[0] - 1.00000001);
+    if (point.getY() >= dimensions[1] - 1)
+      point.setY(dimensions[1] - 1.00000001);
+    if (point.getZ() >= dimensions[2] - 1)
+      point.setZ(dimensions[2] - 1.00000001);
+
     Vector3 base = point.clone(); // Floored point
     base.floor();
 
@@ -73,7 +84,10 @@ public class Noise3 {
 
           // Use vector to lookup other vector in a 3d array
           Vector3 gradientVec = new Vector3();
-          double[] values = vectors[(int) offset.getVals()[0]][(int) offset.getVals()[1]][(int) offset.getVals()[2]].getVals();
+          int posX = Math.min((int) offset.getX(), dimensions[0] - 1);
+          int posY = Math.min((int) offset.getY(), dimensions[1] - 1);
+          int posZ = Math.min((int) offset.getZ(), dimensions[2] - 1);
+          double[] values = vectors[posX][posY][posZ].getVals();
           gradientVec.setVals(values);
           // Store the two values to an array
           zBases[zOff] = getDotSingle(point, offset);

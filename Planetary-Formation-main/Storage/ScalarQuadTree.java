@@ -9,25 +9,28 @@ public class ScalarQuadTree {
     private boolean leafNode;
     private PlanarScalarData data;
 
-    // Branch/root note constructor
+    // Universal node constructor
     ScalarQuadTree(ScalarQuadTree parent, int remainingLevels) {
+        if (remainingLevels == 0) {
+            this.parent = parent;
+            this.children = null;
+            this.leafNode = true;
+            this.data = new PlanarScalarGrid(new double[256][256]);
+            return;
+        }
+
         this.parent = parent;
         this.children = new ScalarQuadTree[2][2];
         this.leafNode = false;
         this.data = null;
-        if (remainingLevels > 1)
-            for (int i = 0; i < 2; i ++)
-                for (int j = 0; j < 2; j ++)
-                    this.children[i][j] = new ScalarQuadTree(this, remainingLevels - 1);
-        else // remaining levels = 1
-            for (int i = 0; i < 2; i ++)
-                for (int j = 0; j < 2; j ++)
-                    this.children[i][j] = new ScalarQuadTree(this, new PlanarScalarGrid());
-                    // TODO replace with PlanarScalarCompressedData all 0 class
+        for (int i = 0; i < 2; i ++)
+            for (int j = 0; j < 2; j ++)
+                this.children[i][j] = new ScalarQuadTree(this, remainingLevels - 1);
     }
 
-    // Leaf node constructor
+    // Specialized leaf node constructor
     // A node can still change between branch and leaf after construction
+    // TODO do that
     private ScalarQuadTree(ScalarQuadTree parent, PlanarScalarData data) {
         this.parent = parent;
         this.children = null;
@@ -86,10 +89,12 @@ public class ScalarQuadTree {
 
     // Operation is applied to every point within zone
     public void mutateLocal(LocalMutator operation, ApplicationZone zone, double size, Vector2 position) {
-        if (zone.checkWithin(Vector2.sum(position, new Vector2(new double[] {size / 2, size / 2})), size)) {
-            System.out.println(position.getX() + " " + position.getY() + ", " + "Skipped at" + size);
+        // Don't bother with it if not in the zone
+        if (!zone.checkWithin(Vector2.sum(position, new Vector2(new double[] {size / 2, size / 2})), size)) {
+            System.out.println(position.getX() + " " + position.getY() + ", " + "Skipped at " + size);
             return;
         }
+
         if (leafNode) {
             data.mutateLocal((Vector2 point, double value) -> {
                 double x = point.getX() * size + position.getX();
@@ -97,7 +102,8 @@ public class ScalarQuadTree {
                 if (x > 1 || y > 1) throw new IllegalArgumentException("x or y greater than 1");
                 return operation.mutate(new Vector2(new double[] {x, y}), value);
             });
-        } else {
+        }
+        else {
             for (int i = 0; i < 2; i ++) {
                 for (int j = 0; j < 2; j ++) {
                     Vector2 offset = new Vector2(new double[] {size * i / 2, size * j / 2});

@@ -81,7 +81,7 @@ public abstract class Vector {
     }
 
     // Normalize self
-    // Scale so that value = 1
+    // Scale so that magnitude = 1
     public void normalize() {
         double factor = 1 / absolute();
         scale(factor);
@@ -97,9 +97,9 @@ public abstract class Vector {
     // Prints vector contents
     public void print() {
         System.out.print("[");
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < vals.length - 1; i++)
             System.out.print(this.vals[i] + ", ");
-        System.out.print(this.vals[2] + "]");
+        System.out.print(this.vals[vals.length - 1] + "]");
     }
 
     // Prints vector contents with a new line

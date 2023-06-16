@@ -6,8 +6,12 @@ import Storage.STL.TriangleFace;
 public class PlanarScalarGrid implements PlanarScalarData{
     // Split implementation cuts space required nearly in half without losing significant precision
     // Total 260 KiB
+    // the mean of the local grid of 16*16 floats
     private double[][] mean; // 4 KiB
+    // the offset of the area from the mean
     private float[][] offset; // 256 KiB
+
+    // Creates a grid with the values in the array of doubles
     PlanarScalarGrid(double[][] data) {
         if (data.length != 256)
             throw new ArrayIndexOutOfBoundsException("Data must be a 256 by 256 array.");
@@ -39,6 +43,7 @@ public class PlanarScalarGrid implements PlanarScalarData{
         }
     }
 
+    // Returns the average value in a 2d array of 16x16 doubles
     private static double sectorAverage(double[][] sector) {
         double sum = 0;
         for (int i = 0; i < 16; i ++) {
@@ -49,12 +54,14 @@ public class PlanarScalarGrid implements PlanarScalarData{
         return sum / 256;
     }
 
+    // returns the value at the point (point is 0 - 1 in both axes)
     public double getPoint(Vector2 point) {
         int x = Math.min((int)(point.getX() * 256.0), 255);
         int y = Math.min((int)(point.getY() * 256.0), 255);
         return mean[x/16][y/16] + offset[x][y];
     }
 
+    // Mutates every point on the grid by setting it to the value output by the operation
     @Override
     public void mutateLocal(ScalarQuadTree.LocalMutator operation) {
         for (int i = 0; i < 16; i++) {
@@ -80,6 +87,8 @@ public class PlanarScalarGrid implements PlanarScalarData{
         }
     }
 
+    // Returns one quarter of the field, scaled up
+    // false means 0, true means 1
     public PlanarScalarGrid getQuadrant(boolean x, boolean y) {
         int xStart = x ? 0 : 128;
         int yStart = y ? 0 : 128;

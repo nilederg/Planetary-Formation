@@ -6,6 +6,7 @@ public class TriangleFace {
     public final Vector3 normal;
     public final Vector3[] vertices;
 
+    // Creates a triangle with all points + the normal vector
     TriangleFace (Vector3 normal, Vector3[] vertices) {
         if (vertices.length != 3)
             throw new IllegalArgumentException("TriangleFace must have 3 vertices.");
@@ -14,6 +15,8 @@ public class TriangleFace {
         this.vertices = vertices;
     }
 
+    // Creates a triangle with all points + a point on one side of the triangle
+    // + a boolean stating whether the normal vector faces toward that point
     public static TriangleFace fromOrientingPoint (Vector3 orientingPoint, boolean facingTowards, Vector3[] vertices) {
         if (vertices.length != 3)
             throw new IllegalArgumentException("TriangleFace must have 3 vertices.");
@@ -37,13 +40,15 @@ public class TriangleFace {
         return new TriangleFace(normal, vertices);
     }
 
+    // Converts a float into an array of the 4 representative bytes
     private static byte[] floatToByteArray(float value) {
         int intBits =  Float.floatToIntBits(value);
         return new byte[] {
                 (byte) (intBits >> 24), (byte) (intBits >> 16), (byte) (intBits >> 8), (byte) (intBits) };
     }
 
-    public byte[] exportCode () {
+    // Exports the 50 byte code of the triangle in a byte array, this is how it is stored in an stl file
+    public byte[] exportSTLCode() {
         byte[] byteArray = new byte[50];
 
         // Array of all values which will be stored

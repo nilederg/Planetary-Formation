@@ -115,12 +115,12 @@ public abstract class Vector {
             this.vals[i] = Math.floor(this.vals[i]);
     }
 
-    // Getters and Setters
-
+    // get vector
     public double[] getVals() {
         return vals;
     }
 
+    // set vector
     public void setVals(double[] vals) {
         this.vals = vals;
     }

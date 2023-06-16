@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class planetaryFormation {
+  // Makes a sphere and tests it at 3 points
+  // And returns a triangle's code
   public static void main(String[] args) {
     TerrestrialPlanet planet = new TerrestrialPlanet(5, 10000000000L);
     planet.initFractalNoise(5, 6);
@@ -13,9 +15,10 @@ public class planetaryFormation {
     System.out.println(planet.terrain.getPoint(new GeoCoord(Math.toRadians(40), Math.toRadians(21))));
     System.out.println(planet.terrain.getPoint(new GeoCoord(Math.toRadians(90), Math.toRadians(128))));
 
-    System.out.println(Arrays.toString(TriangleFace.fromOrientingPoint(new Vector3(new double[]{0, 0, 0}), true, new Vector3[]{new Vector3(new double[]{9, 4, 5}), new Vector3(new double[]{9, 3, 8}), new Vector3(new double[]{16, 49, 1})}).exportCode()));
+    System.out.println(Arrays.toString(TriangleFace.fromOrientingPoint(new Vector3(new double[]{0, 0, 0}), true, new Vector3[]{new Vector3(new double[]{9, 4, 5}), new Vector3(new double[]{9, 3, 8}), new Vector3(new double[]{16, 49, 1})}).exportSTLCode()));
   }
 
+  // Gets a double from input with exception handling and assurance that a double will be returned
   static double getDouble(String prompt, Scanner sc) {
     double radius;
     while (true) {

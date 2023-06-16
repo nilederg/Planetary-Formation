@@ -2,14 +2,18 @@ import Storage.Positionals.Noise3;
 import Storage.Positionals.Vector3;
 import Storage.ScalarSphere;
 
+// Stores a planet and its terrain
+// terrain kept public to allow easy mutation for testing
 public class TerrestrialPlanet {
     public ScalarSphere terrain;
 
+    // Making a planet is the same as making a sphere - refer to ScalarSphere for comment docs
     TerrestrialPlanet (int resolution, long maxRAM) {
         terrain = new ScalarSphere(resolution, maxRAM);
     }
 
-    // Scale is the lowest frequency, depth is the highest
+    // Scale is the lowest frequency of noise generated, depth is the highest
+    // Fills the planet with fractal noise as a starting point for generation
     public void initFractalNoise(int scale, int depth) {
         System.out.println("Generating fractal noise...");
 

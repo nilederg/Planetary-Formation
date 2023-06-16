@@ -10,6 +10,7 @@ public class ScalarSphere {
     private final ScalarQuadTree[] faces; // R(ight) L F B U D
     public final long memory;
 
+    // Initialize sphere, resolution is the depth that quadtrees propagate, maxRAM is (in bytes) the maximum RAM the program can use before it throws an exception,
     public ScalarSphere(int resolution, long maxRAM) {
         memory = (long)Math.pow(4, resolution) * 266240 * 6;
         if (memory > maxRAM)
@@ -23,10 +24,12 @@ public class ScalarSphere {
         System.out.println(memoryString() + " Sphere initialized");
     }
 
+    // outputs the value rounded to `precision` digits as a string
     private String round(double value, double precision) {
         return Long.toString((long)value) + "." + (int)((value % 1) * 10);
     }
 
+    // outputs a string representing the amount of memory the sphere uses
     public String memoryString() {
         if (memory > 1099511627776L)
             return round(memory / 1099511627776.0, 0.1) + " TiB";
@@ -59,6 +62,7 @@ public class ScalarSphere {
         throw new IllegalArgumentException("Case " + location.largestComponent() + " is not a valid dimension index.");
     }
 
+    // gets the vector2 point on the face the vector3 point lies on
     private Vector2 getPointOnFace(Vector3 cubicVector) {
         cubicVector.normalizeCube();
         switch (cubicVector.largestComponent()) {
@@ -92,11 +96,13 @@ public class ScalarSphere {
         return tree.getPoint(getPointOnFace(cubicVector));
     }
 
+    // takes in a point on a sphere and its current value and outputs a new value
     @FunctionalInterface
     public interface SphereMutation {
         double mutate(Vector3 point, double value);
     }
 
+    // takes in a point on a sphere and the range to check and returns whether or not it is worthwhile to mutate in that range from that point
     @FunctionalInterface
     public interface SphereApplicationZone {
         // Point is point on sphere surface, range is radians distance from point
@@ -104,6 +110,7 @@ public class ScalarSphere {
         boolean checkWithin(Vector3 point, double range);
     }
 
+    // Returns the point (Vector3) at the center of the specified face
     private static Vector3 faceCenter(int face) {
         switch (face) {
             case 0 -> {return new Vector3(new double[]{-1, 0, 0});}
@@ -116,6 +123,7 @@ public class ScalarSphere {
         throw new IllegalArgumentException("Face must be an integer between 0 and 6.");
     }
 
+    // places the point on a face, and outputs where that point on that face is in the 3d cube
     private static Vector3 placeFace(Vector2 point, int face) {
         Vector3 location = null;
         switch (face) {
@@ -165,6 +173,7 @@ public class ScalarSphere {
         }, (Vector3 point, double range) -> {return true;});
     }
 
+    /*
     public void exportPng(long fileSize) {
         // TODO implement this feature
         //      export a png with width:height ratio 2:1
@@ -172,7 +181,7 @@ public class ScalarSphere {
         //      implement soon so testing can occur
     }
 
-    /*private class stlTriangle {
+    private class stlTriangle {
         private Vector3 normal;
         private Vector3[] vertices;
     }

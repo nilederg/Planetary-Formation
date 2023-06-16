@@ -1,4 +1,4 @@
-package Storage.Positionals;
+/*package Storage.Positionals;
 
 public class Particle {
   protected Vector3 position; // Meters from origin
@@ -10,4 +10,4 @@ public class Particle {
     // 1 force at 1 interval produces 1 distance change
     
   }
-}
+}*/

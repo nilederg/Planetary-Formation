@@ -6,6 +6,7 @@ import java.util.Objects;
 // I will NEVER need more than this in geoCoord, it's simply cleaner than sending a 2 double array.
 // I am confident in this one violation of encapsulation principles.
 public record GeoCoord(double latitude, double longitude) {
+    // Check if equal
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -14,6 +15,7 @@ public record GeoCoord(double latitude, double longitude) {
         return Double.compare(geoCoord.latitude, latitude) == 0 && Double.compare(geoCoord.longitude, longitude) == 0;
     }
 
+    // hash function
     @Override
     public int hashCode() {
         return Objects.hash(latitude, longitude);

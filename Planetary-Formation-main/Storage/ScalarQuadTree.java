@@ -44,6 +44,7 @@ public class ScalarQuadTree {
         return this.children[(point.getX() < 0.5) ? 0 : 1][(point.getY() < 0.5) ? 0 : 1];
     }
 
+    // Gets the tree traversing all the way down at that point until it hits a leaf node
     protected ScalarQuadTree getLeafNode(Vector2 point) {
         if (this.leafNode)
             return this;
@@ -54,12 +55,14 @@ public class ScalarQuadTree {
         return relevantChild(point).getLeafNode(point);
     }
 
+    // Gets the value at a provided point in the tree
     public double getPoint(Vector2 point) {
         ScalarQuadTree leafNode = getLeafNode(point);
 
         return leafNode.data.getPoint(point);
     }
 
+    // Splits the tree into quarters, making it a branch node and creating four children nodes based on its quadrants
     private void split() {
         // You can't iterate on a boolean - sorry!
         children = new ScalarQuadTree[][] {
@@ -75,11 +78,13 @@ public class ScalarQuadTree {
         this.leafNode = false;
     }
 
+    // Takes in the point's position and value and outputs a new value for it to be
     @FunctionalInterface
     public interface LocalMutator {
         double mutate(Vector2 point, double value);
     }
 
+    // Takes in the point's position and the range to check and returns if the tree is worthwhile to mutate within that range
     @FunctionalInterface
     public interface ApplicationZone {
         // Point is point on sphere surface, range is radians distance from point

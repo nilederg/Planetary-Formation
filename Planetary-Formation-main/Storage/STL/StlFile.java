@@ -14,6 +14,7 @@ public class StlFile {
 
     // Header is 80B, 10B reserved for unit declaration, 70B remain
     // Reserve 4B at the start of the file for triangle count
+    // Creates a file interface with the filename, the unit that the file will be stored in, and a short informative header.
     StlFile(String filename, String unit, String header) throws IOException {
         file = new FileWriter(filename);
         triCount = 0;
@@ -26,10 +27,11 @@ public class StlFile {
         file.write(header + "\nUNITS=" + unit + "\n    ");
     }
 
+    // Writes a TriangleFace to the file
     public void writeTriangle(TriangleFace triangle) throws IOException {
         this.triCount ++;
 
-        byte[] code = triangle.exportCode();
+        byte[] code = triangle.exportSTLCode();
 
         for (byte codeByte : code)
             this.file.append((char) codeByte);

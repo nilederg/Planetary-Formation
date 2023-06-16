@@ -5,7 +5,7 @@ import Storage.STL.TriangleFace;
 import java.util.Arrays;
 import java.util.Scanner;
 
-public class planetaryFormation {
+public class PlanetaryFormation {
   // Makes a sphere and tests it at 3 points
   // And returns a triangle's code
   public static void main(String[] args) {

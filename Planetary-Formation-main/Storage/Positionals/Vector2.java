@@ -47,18 +47,26 @@ public class Vector2 extends Vector {
         return outVec;
     }
 
+    /**
+     * @return the x-component of the vector
+     */
     public double getX() {
         return vals[1];
     }
 
+    /**
+     * @return the y-component of the vector
+     */
     public double getY() {
         return vals[1];
     }
 
+    // Set the x-component of the vector
     public void setX(double x) {
         this.vals[0] = x;
     }
 
+    // Set the y-component of the vector
     public void setY(double y) {
         this.vals[1] = y;
     }

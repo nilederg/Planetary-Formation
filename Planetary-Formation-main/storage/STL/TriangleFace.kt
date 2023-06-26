@@ -1,72 +1,61 @@
-package Storage.STL;
+package storage.STL
 
-import Storage.Positionals.Vector3;
+import storage.positionals.Vector3
 
-public class TriangleFace {
-    public final Vector3 normal;
-    public final Vector3[] vertices;
+class TriangleFace internal constructor(normal: Vector3, vertices: Array<Vector3>) {
+    private val normal: Vector3
+    private val vertices: Array<Vector3>
 
-    TriangleFace (Vector3 normal, Vector3[] vertices) {
-        if (vertices.length != 3)
-            throw new IllegalArgumentException("TriangleFace must have 3 vertices.");
-
-        this.normal = normal;
-        this.vertices = vertices;
+    init {
+        if (vertices.size != 3) throw IllegalArgumentException("TriangleFace must have 3 vertices.")
+        this.normal = normal
+        this.vertices = vertices
     }
 
-    public static TriangleFace fromOrientingPoint (Vector3 orientingPoint, boolean facingTowards, Vector3[] vertices) {
-        if (vertices.length != 3)
-            throw new IllegalArgumentException("TriangleFace must have 3 vertices.");
-
-        Vector3 AB = vertices[0].getRel(vertices[1]);
-        Vector3 AC = vertices[0].getRel(vertices[2]);
-
-        Vector3 normal = Vector3.crossProduct(AB, AC);
-
-        double product = normal.dotProduct(vertices[0].getRel(orientingPoint));
-
-        if (product > 0 ^ facingTowards) {
-            normal.scale(-1);
-            Vector3 vertexA = vertices[0].clone();
-            vertices[0] = vertices[1].clone();
-            vertices[1] = vertexA;
-        }
-
-        normal.normalize();
-
-        return new TriangleFace(normal, vertices);
-    }
-
-    private static byte[] floatToByteArray(float value) {
-        int intBits =  Float.floatToIntBits(value);
-        return new byte[] {
-                (byte) (intBits >> 24), (byte) (intBits >> 16), (byte) (intBits >> 8), (byte) (intBits) };
-    }
-
-    public byte[] exportCode () {
-        byte[] byteArray = new byte[50];
+    fun exportCode(): ByteArray {
+        val byteArray = ByteArray(50)
 
         // Array of all values which will be stored
-        double[][] doubleArray = new double[4][3];
-        doubleArray[0] = this.normal.getVals();
-        for (int i = 0; i < 3; i ++)
-            doubleArray[i+1] = this.vertices[i].getVals();
+        val doubleArray: Array<DoubleArray> = Array(4) { DoubleArray(3) }
+        doubleArray[0] = normal.values
+        for (i in 0..2) doubleArray[i + 1] = vertices[i].values
 
         // Convert values into floats and store in byteArray
-        for (int i = 0; i < 4; i ++) {
-            for (int j = 0; j < 3; j++) {
-                float value = (float)doubleArray[i][j];
-                byte[] bytes = floatToByteArray(value);
-                assert bytes.length == 4;
-                for (int k = 0; k < 4; k ++)
-                    byteArray[4 * (3 * i + j) + k] = bytes[k];
+        for (i in 0..3) {
+            for (j in 0..2) {
+                val value: Float = doubleArray[i][j].toFloat()
+                val bytes: ByteArray = floatToByteArray(value)
+                assert(bytes.size == 4)
+                for (k in 0..3) byteArray[4 * (3 * i + j) + k] = bytes.get(k)
             }
         }
 
         // Attribute Byte Count is always 0
-        byteArray[48] = 0;
-        byteArray[49] = 0;
+        byteArray[48] = 0
+        byteArray[49] = 0
+        return byteArray
+    }
 
-        return byteArray;
+    companion object {
+        fun fromOrientingPoint(orientingPoint: Vector3, facingTowards: Boolean, vertices: Array<Vector3>): TriangleFace {
+            if (vertices.size != 3) throw IllegalArgumentException("TriangleFace must have 3 vertices.")
+            val AB: Vector3 = vertices[0].getRel(vertices[1])
+            val AC: Vector3 = vertices[0].getRel(vertices[2])
+            val normal: Vector3 = Vector3.crossProduct(AB, AC)
+            val product: Double = normal.dotProduct(vertices[0].getRel(orientingPoint))
+            if ((product > 0) xor facingTowards) {
+                normal.scale(-1.0)
+                val vertexA: Vector3 = vertices[0].clone()
+                vertices[0] = vertices[1].clone()
+                vertices[1] = vertexA
+            }
+            normal.normalize()
+            return TriangleFace(normal, vertices)
+        }
+
+        private fun floatToByteArray(value: Float): ByteArray {
+            val intBits: Int = java.lang.Float.floatToIntBits(value)
+            return byteArrayOf((intBits shr 24).toByte(), (intBits shr 16).toByte(), (intBits shr 8).toByte(), (intBits).toByte())
+        }
     }
 }

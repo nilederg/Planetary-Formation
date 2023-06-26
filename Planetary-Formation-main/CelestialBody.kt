@@ -1,4 +1,2 @@
-public class CelestialBody {
-    // Orbit
-
+class CelestialBody constructor() { // Orbit
 }

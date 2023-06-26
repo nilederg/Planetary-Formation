@@ -1,5 +1,5 @@
-package Storage;
+package storage
 
-public interface PlanarScalarCompressedData extends PlanarScalarData{
-    PlanarScalarGrid decompress();
+open interface PlanarScalarCompressedData : PlanarScalarData {
+    open fun decompress(): PlanarScalarGrid?
 }

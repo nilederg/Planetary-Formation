@@ -1,81 +1,89 @@
-package Storage.Positionals;
+package storage.positionals
+
+import kotlin.math.sin
+import kotlin.math.sqrt
+
 // A 3d vector class
+class Vector3 : Vector {
+    // Initialization with value input
+    constructor(values: DoubleArray) {
+        this.values = values
+    }
 
-public class Vector3 extends Vector {
-  // Initialization with value input
-  public Vector3(double[] values) {
-    this.vals = values;
-  }
+    // Initialization without value input (overload)
+    constructor() {
+        values = doubleArrayOf(0.0, 0.0, 0.0)
+    }
 
-  // Initialization without value input (overload)
-  public Vector3() {
-    this.vals = new double[]{ 0, 0, 0 };
-  }
+    // Returns a clone of this vector
+    public override fun clone(): Vector3 {
+        val out: Vector3 = Vector3()
+        System.arraycopy(values, 0, out.values, 0, 3)
+        return out
+    }
 
-  // Creates a vector from latitude and longitude
-  public static Vector3 fromSphericalCoordinates(GeoCoord coordinate) {
-    Vector3 output = new Vector3();
-    output.setZ(Math.sin(coordinate.latitude()));
-    double factor = Math.sqrt(1 - output.getZ() * output.getZ());
-    output.setX(Math.sin(coordinate.longitude()) * factor);
-    output.setY(Math.sin(coordinate.longitude()) * factor);
-    return output;
-  } // TODO optimize with table lookup
+    // Gets relative pos of input (offset) vector to this (base) vector
+    // (vec - this)
+    public override fun getRel(vec: Vector): Vector3 {
+        val outVec: Vector3 = Vector3()
+        for (i in 0..2) outVec.values[i] = vec.values[i] - values[i]
+        return outVec
+    }
 
-  // Returns a clone of this vector
-  @Override
-  public Vector3 clone() {
-    Vector3 out = new Vector3();
-    System.arraycopy(this.vals, 0, out.vals, 0, 3);
-    return out;
-  }
+    fun getX(): Double {
+        return values[0]
+    }
 
-  // Return the sum of two vectors
-  public static Vector3 sum(Vector3 vecA, Vector3 vecB) {
-    Vector3 output = new Vector3();
-    output.setX(vecA.getX() + vecB.getX());
-    output.setY(vecA.getY() + vecB.getY());
-    output.setZ(vecA.getZ() + vecB.getZ());
-    return output;
-  }
+    fun getY(): Double {
+        return values[1]
+    }
 
-  public static Vector3 crossProduct(Vector3 vecA, Vector3 vecB) {
-    double x = (vecA.getY() * vecB.getZ()) -(vecA.getZ() * vecB.getY());
-    double y = (vecA.getZ() * vecB.getX()) -(vecA.getX() * vecB.getZ());
-    double z = (vecA.getX() * vecB.getY()) -(vecA.getY() * vecB.getX());
-    return new Vector3(new double[] {x, y, z});
-  }
+    fun getZ(): Double {
+        return values[2]
+    }
 
-  // Gets relative pos of input (offset) vector to this (base) vector
-  // (vec - this)
-  public Vector3 getRel(Vector vec) {
-    Vector3 outVec = new Vector3();
-    for (int i = 0; i < 3; i++)
-      outVec.vals[i] = vec.vals[i] - this.vals[i];
-    return outVec;
-  }
+    fun setX(x: Double) {
+        values[0] = x
+    }
 
-  public double getX() {
-    return vals[1];
-  }
+    fun setY(y: Double) {
+        values[1] = y
+    }
 
-  public double getY() {
-    return vals[1];
-  }
+    fun setZ(z: Double) {
+        values[2] = z
+    }
 
-  public double getZ() {
-    return vals[1];
-  }
+    companion object {
+        val zero: Vector3 = Vector3(doubleArrayOf(0.0, 0.0, 0.0))
+        fun fromCoords(x: Double, y: Double, z: Double): Vector3 {
+            return Vector3(doubleArrayOf(x, y, z))
+        }
 
-  public void setX(double x) {
-    this.vals[0] = x;
-  }
+        // Creates a vector from latitude and longitude
+        fun fromSphericalCoordinates(coordinate: GeoCoord): Vector3 {
+            val output: Vector3 = Vector3()
+            output.setZ(sin(coordinate.latitude))
+            val factor: Double = sqrt(1 - output.getZ() * output.getZ())
+            output.setX(sin(coordinate.longitude) * factor)
+            output.setY(sin(coordinate.longitude) * factor)
+            return output
+        } // TODO optimize with table lookup
 
-  public void setY(double y) {
-    this.vals[1] = y;
-  }
+        // Return the sum of two vectors
+        fun sum(vecA: Vector3, vecB: Vector3): Vector3 {
+            val output: Vector3 = Vector3()
+            output.setX(vecA.getX() + vecB.getX())
+            output.setY(vecA.getY() + vecB.getY())
+            output.setZ(vecA.getZ() + vecB.getZ())
+            return output
+        }
 
-  public void setZ(double z) {
-    this.vals[2] = z;
-  }
+        fun crossProduct(vecA: Vector3, vecB: Vector3): Vector3 {
+            val x: Double = (vecA.getY() * vecB.getZ()) - (vecA.getZ() * vecB.getY())
+            val y: Double = (vecA.getZ() * vecB.getX()) - (vecA.getX() * vecB.getZ())
+            val z: Double = (vecA.getX() * vecB.getY()) - (vecA.getY() * vecB.getX())
+            return Vector3(doubleArrayOf(x, y, z))
+        }
+    }
 }

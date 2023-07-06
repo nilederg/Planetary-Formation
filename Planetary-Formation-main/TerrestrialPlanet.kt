@@ -3,6 +3,7 @@ import storage.positionals.Vector3
 import storage.ScalarSphere
 import storage.ScalarSphere.SphereApplicationZone
 import storage.ScalarSphere.SphereMutation
+import storage.positionals.GeoCoord
 import kotlin.math.pow
 
 class TerrestrialPlanet internal constructor(resolution: Int, maxRAM: Long) {
@@ -13,7 +14,7 @@ class TerrestrialPlanet internal constructor(resolution: Int, maxRAM: Long) {
     }
 
     // Scale is the lowest frequency, depth is the highest
-    fun initFractalNoise(scale: Int, depth: Int) {
+    fun initFractalNoise(scale: Int, depth: Int, magnitude: Double) {
         println("Generating fractal noise...")
         val layers: Array<Noise3> = Array(depth - scale) {i ->
             val freq: Int = 1 + 2.0.pow((i + scale).toDouble()).toInt()
@@ -23,7 +24,7 @@ class TerrestrialPlanet internal constructor(resolution: Int, maxRAM: Long) {
         }
         println("Fractal noise generated")
         println("Filling sphere with noise...")
-        terrain.mutateSphereLocal({ point: Vector3, _: Double ->
+        terrain.mutateSphereLocal({ point: Vector3, _: Long ->
             val adjustedPoint: Vector3 = point.clone()
             adjustedPoint.scale(0.5)
             adjustedPoint.add(Vector3(doubleArrayOf(0.5, 0.5, 0.5)))
@@ -34,8 +35,13 @@ class TerrestrialPlanet internal constructor(resolution: Int, maxRAM: Long) {
                 layerPoint.scale((layer.dimensions[0] - 1).toDouble())
                 sum += layer.getPoint(layerPoint) * 0.5.pow(i.toDouble())
             }
-            sum
+            return@mutateSphereLocal (sum * magnitude).toLong()
         }, { _: Vector3, _: Double -> true })
         println("Sphere randomized with fractal noise")
+    }
+
+    // Launches one asteroid
+    fun launchAsteroid(point: GeoCoord, mass: Double, speed: Double) {
+
     }
 }

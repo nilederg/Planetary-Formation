@@ -20,7 +20,7 @@ public class Vector2 extends Vector {
             newVals[i] = operation.applyAsDouble(newVals[i]);
         }
         setVals(newVals);
-    } // TODO add single setVal method
+    }
 
     // Returns a clone of this vector
     @Override
@@ -28,6 +28,14 @@ public class Vector2 extends Vector {
         Vector2 out = new Vector2();
         System.arraycopy(this.vals, 0, out.vals, 0, 2);
         return out;
+    }
+
+    // Return the sum of two vectors
+    public static Vector2 sum(Vector2 vecA, Vector2 vecB) {
+        Vector2 output = new Vector2();
+        output.setX(vecA.getX() + vecB.getX());
+        output.setY(vecA.getY() + vecB.getY());
+        return output;
     }
 
     // Gets relative pos of input (offset) vector to this (base) vector

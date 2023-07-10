@@ -59,8 +59,18 @@ public class ScalarQuadTree {
     }
 
     private void split() {
-        // TODO cut leaf node into quarters
-        //      throw exception if not leaf
+        // You can't iterate on a boolean - sorry!
+        children = new ScalarQuadTree[][] {
+                new ScalarQuadTree[] {
+                        new ScalarQuadTree(this, data.getQuadrant(false, false)),
+                        new ScalarQuadTree(this, data.getQuadrant(false, true)),
+                }, new ScalarQuadTree[] {
+                        new ScalarQuadTree(this, data.getQuadrant(true, false)),
+                        new ScalarQuadTree(this, data.getQuadrant(true, true)),
+                }
+        };
+        this.data = null;
+        this.leafNode = false;
     }
 
     @FunctionalInterface

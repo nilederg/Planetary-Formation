@@ -1,6 +1,7 @@
 package Storage;
 
 import Storage.Positionals.Vector2;
+import Storage.Positionals.Vector3;
 
 // A recursive field that stores a grid of scalars
 public class ScalarQuadTree {
@@ -54,5 +55,14 @@ public class ScalarQuadTree {
         return leafNode.data.getPoint(point);
     }
 
+    @FunctionalInterface
+    public interface LocalMutator {
+        double mutate(Vector2 point, double value);
+    }
 
+    public void mutateLocal(LocalMutator operation, double size) {
+        if (leafNode) {
+            //
+        }
+    }
 }

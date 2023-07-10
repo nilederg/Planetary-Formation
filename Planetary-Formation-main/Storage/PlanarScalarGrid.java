@@ -17,8 +17,8 @@ public class PlanarScalarGrid implements PlanarScalarData{
     }
 
     public double getPoint(Vector2 point) {
-        int xIndex = (int)(point.getX() * 256.0);
-        int yIndex = (int)(point.getY() * 256.0);
+        int xIndex = Math.min((int)(point.getX() * 256.0), 255);
+        int yIndex = Math.min((int)(point.getY() * 256.0), 255);
         return this.data[xIndex][yIndex];
     }
 

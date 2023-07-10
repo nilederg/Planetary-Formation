@@ -30,6 +30,15 @@ public class Vector3 extends Vector {
     return out;
   }
 
+  // Return the sum of two vectors
+  public static Vector3 sum(Vector3 vecA, Vector3 vecB) {
+    Vector3 output = new Vector3();
+    output.setX(vecA.getX() + vecB.getX());
+    output.setY(vecA.getY() + vecB.getY());
+    output.setZ(vecA.getZ() + vecB.getZ());
+    return output;
+  }
+
   // Gets relative pos of input (offset) vector to this (base) vector
   // (vec - this)
   public Vector3 getRel(Vector vec) {

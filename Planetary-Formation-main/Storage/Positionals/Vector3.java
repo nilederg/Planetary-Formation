@@ -15,10 +15,10 @@ public class Vector3 extends Vector {
   // Creates a vector from latitude and longitude
   public static Vector3 fromSphericalCoordinates(GeoCoord coordinate) {
     Vector3 output = new Vector3();
-    output.setZ(Math.sin(coordinate.latitude));
+    output.setZ(Math.sin(coordinate.latitude()));
     double factor = Math.sqrt(1 - output.getZ() * output.getZ());
-    output.setX(Math.sin(coordinate.longitude) * factor);
-    output.setY(Math.sin(coordinate.longitude) * factor);
+    output.setX(Math.sin(coordinate.longitude()) * factor);
+    output.setY(Math.sin(coordinate.longitude()) * factor);
     return output;
   }
 

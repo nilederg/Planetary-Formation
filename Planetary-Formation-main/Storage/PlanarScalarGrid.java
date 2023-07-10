@@ -1,6 +1,7 @@
 package Storage;
 
 import Storage.Positionals.Vector2;
+import Storage.STL.TriangleFace;
 
 public class PlanarScalarGrid implements PlanarScalarData{
     // Split implementation cuts space required nearly in half without losing significant precision
@@ -96,4 +97,8 @@ public class PlanarScalarGrid implements PlanarScalarData{
         }
         return new PlanarScalarGrid(quadrantData);
     }
+
+   /*public TriangleFace[] exportTriangles() {
+
+    }*/
 }

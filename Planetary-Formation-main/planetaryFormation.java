@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class planetaryFormation {
   public static void main(String[] args) {
-    TerrestrialPlanet planet = new TerrestrialPlanet(2, 10000000000L);
+    TerrestrialPlanet planet = new TerrestrialPlanet(5, 10000000000L);
     planet.initFractalNoise(5, 6);
     System.out.println(planet.terrain.getPoint(new GeoCoord(Math.toRadians(40), Math.toRadians(20))));
     System.out.println(planet.terrain.getPoint(new GeoCoord(Math.toRadians(40), Math.toRadians(21))));

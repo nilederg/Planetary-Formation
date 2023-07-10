@@ -1,83 +1,128 @@
 package storage
 
-import storage.positionals.Vector2
-import storage.positionals.Vector3
 import storage.STL.TriangleFace
 import storage.ScalarQuadTree.LocalMutator
+import storage.positionals.Index
+import storage.positionals.Vector2
+import storage.positionals.Vector3
+import java.awt.geom.IllegalPathStateException
 import java.util.function.Function
+import kotlin.math.absoluteValue
+import kotlin.math.pow
 
-class PlanarScalarGrid internal constructor(data: Array<DoubleArray>) : PlanarScalarData {
-    // Split implementation cuts space required nearly in half without losing significant precision
-    // Total 260 KiB
-    private val mean // 4 KiB
-            : Array<DoubleArray>
-    private val offset // 256 KiB
-            : Array<FloatArray>
+@OptIn(ExperimentalUnsignedTypes::class)
+class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScalarData {
+    // Repeating layers of higher resolution but smaller range hone in on the precise value for each point
+    private var mean: Long                 // 1x1   8B
+    private var intExponent: UByte         // 1x1   1B
+    private val intOffsets: IntArray       // 4x4   64B + 12B overhead
+    private val shortExponents: UByteArray // 4x4   16B + 12B overhead
+    private val shortOffsets: ShortArray   // 16x16 512B + 12B overhead
+    private val byteExponents: UByteArray  // 16x16 256B + 12B overhead
+    private val byteOffsets: ByteArray     // 64x64 4096B + 12B overhead
+    //                                              4953B + 60B+20B overhead = 5033B
+    // Point = mean + 2^intExponent * intOffset + 2^shortExponent * shortOffset + 2^byteExponent *
+    //      : byteOffset
+    //      : byteOffset + adjacentByteOffset
+    //      : byteOffset + adjacentByteOffset + otherAdjacentByteOffset
 
     init {
-        if (data.size != 256) throw ArrayIndexOutOfBoundsException("Data must be a 256 by 256 array.")
-        if (data[0].size != 256) throw ArrayIndexOutOfBoundsException("Data must be a 256 by 256 array.")
-        mean = Array (16) { DoubleArray(16) }
-        offset = Array (256) { FloatArray(256) }
+        if (data.size != 64) throw ArrayIndexOutOfBoundsException("Data must be a 64 by 64 array.")
+        if (data[0].size != 64) throw ArrayIndexOutOfBoundsException("Data must be a 64 by 64 array.")
 
-        // Loop through all 256 sectors
-        for (i in 0..15) {
-            for (j in 0..15) {
-                // Get average in sector
-                var sum: Double = 0.0
-                for (k in 0..15) {
-                    for (l in 0..15) {
-                        sum += data[i * 16 + k][j * 16 + l].toDouble()
-                    }
-                }
-                sum /= 256.0
-                mean[i][j] = sum
-                // Store offset for each pixel in sector from sector average
-                for (k in 0..15) {
-                    for (l in 0..15) {
-                        offset[i * 16 + k][j * 16 + l] = (data[i * 16 + k][j * 16 + l] - sum).toFloat()
-                    }
-                }
-            }
-        }
+        mean = 0L
+        intOffsets = IntArray(16)
+        shortOffsets = ShortArray(256)
+        byteOffsets = ByteArray(4096)
+        intExponent = 0u
+        shortExponents = UByteArray(16)
+        byteExponents = UByteArray(256)
     }
 
-    public override fun getPoint(point: Vector2): Double {
-        val x: Int = (point.getX() * 256.0).toInt().coerceAtMost(255)
-        val y: Int = (point.getY() * 256.0).toInt().coerceAtMost(255)
-        return mean[x / 16][y / 16] + offset[x][y]
+    // Getting
+
+    // Get one of the offsets at the specified index (size=64)
+    private fun intOffset(point: Index): Long {
+        return (2.0.pow(intExponent.toInt())).toLong() * intOffsets[(point / 16).arrIndex(4)]
+    }
+
+    private fun shortOffset(point: Index): Long {
+        return ((2.0.pow(shortExponents[(point / 16).arrIndex(4)].toInt())).toLong()
+                * shortOffsets[(point / 4).arrIndex(16)])
+    }
+
+    /**
+     * VVVV
+     * >##<
+     * >##<
+     * ^^^^
+     */
+    private fun byteSummer(point: Index): Short {
+        val sectorPos = point % 4
+        val offsetHere = byteOffsets[point.arrIndex(64)]
+        if ((sectorPos.x == 1 || sectorPos.x == 2) &&
+            (sectorPos.y == 1 || sectorPos.y == 2))
+            return offsetHere.toShort()
+        if (sectorPos.y == 0)
+            return (offsetHere + byteSummer(Index(point.x, 1))).toShort()
+        if (sectorPos.y == 3)
+            return (offsetHere + byteSummer(Index(point.x, 2))).toShort()
+        if (sectorPos.x == 0)
+            return (offsetHere + byteSummer(Index(1, point.y))).toShort()
+        if (sectorPos.x == 3)
+            return (offsetHere + byteSummer(Index(2, point.y))).toShort()
+        throw IllegalPathStateException("Unreachable state")
+    }
+    private fun byteOffset(point: Index): Long {
+        return (2.0.pow(byteExponents[(point / 4).arrIndex(16)].toInt())).toLong() * byteSummer(point)
+    }
+
+    private fun getFixedPoint(point: Vector2): Long {
+        val index = Index.fromVector(point, 64)
+        return byteOffset(index) + shortOffset(index) + intOffset(index) + mean
+    }
+
+    override fun getPoint(point: Vector2): Double {
+        return getFixedPoint(point).toDouble()
+    }
+
+    // Setting
+
+    fun set(points: LongArray) {
+        Index.iterate(4) { intSector: Index ->
+            var maxExponent: UByte = 0u
+            Index.iterate(4) { shortSector: Index ->
+                var sum = 0.0
+                Index.iterate(2) { offset: Index ->
+                    val position = intSector * 16 + shortSector * 4 + offset + 1
+                    sum += points[position.arrIndex(64)]
+                }
+                sum /= 4
+                var exponent: UByte = 0u
+                val value = sum
+                // Bit-manipulate the exponent out of the double
+                exponent = (value.absoluteValue.toRawBits() shr 52).coerceAtMost(UByte.MAX_VALUE.toLong()).toUByte()
+                if (exponent > maxExponent)
+                    maxExponent = exponent
+            }
+            shortExponents[intSector.arrIndex(4)] = maxExponent
+        }
     }
 
     public override fun mutateLocal(operation: LocalMutator) {
-        for (i in 0..15) {
-            for (j in 0..15) {
-                // Temporary array with excessive precision before compression into f32
-                val sector: Array<DoubleArray> = Array(16) { DoubleArray(16) }
-                for (k in 0..15) {
-                    for (l in 0..15) {
-                        val position: Vector2 = Vector2(doubleArrayOf((i * 16 + k) / 256.0, (j * 16 + l) / 256.0))
-                        val value: Double = getPoint(Vector2(doubleArrayOf(i.toDouble(), j.toDouble()))).toDouble()
-                        sector[k][l] = operation.mutate(position, value)
-                    }
-                }
-                val average: Double = sectorAverage(sector)
-                mean[i][j] = average
-                // Compress into float32 and store to offset
-                for (k in 0..15) {
-                    for (l in 0..15) {
-                        offset[i * 16 + k][j * 16 + l] = (sector[k][l] - average).toFloat()
-                    }
-                }
-            }
+        val newVals = LongArray(4096)
+        Index.iterate(64) {point: Index ->
+            newVals[point.arrIndex(64)] = operation.mutate(point.toVector(64), byteOffset(point) + shortOffset(point) + intOffset(point) + mean)
         }
+        set(newVals)
     }
 
     public override fun getQuadrant(x: Boolean, y: Boolean): PlanarScalarGrid {
-        val xStart: Int = if (x) 0 else 128
-        val yStart: Int = if (y) 0 else 128
-        val quadrantData: Array<DoubleArray> = Array(256) { DoubleArray(256) }
-        for (i in 0..127) {
-            for (j in 0..127) {
+        val xStart: Int = if (x) 0 else 32
+        val yStart: Int = if (y) 0 else 32
+        val quadrantData: Array<DoubleArray> = Array(256) { LongArray(256) }
+        for (i in 0 until 128) {
+            for (j in 0 until 128) {
                 val value: Double = getPoint(Vector2(doubleArrayOf((i + xStart).toDouble(), (j + yStart).toDouble()))).toDouble()
                 // @formatter:off
                 quadrantData[i * 2]    [j * 2]     = value
@@ -92,8 +137,8 @@ class PlanarScalarGrid internal constructor(data: Array<DoubleArray>) : PlanarSc
 
     public override fun exportTriangles(projector: Function<Vector3, Vector3>): Array<TriangleFace> {
         val triangles: Array<TriangleFace?> = arrayOfNulls<TriangleFace>(255 * 255 * 2)
-        for (i in 0..254) {
-            for (j in 0..254) {
+        for (i in 0 until 255) {
+            for (j in 0 until 255) {
                 val x: Double = i / 256.0
                 val y: Double = j / 256.0
                 val unit: Double = 1 / 256.0
@@ -111,16 +156,6 @@ class PlanarScalarGrid internal constructor(data: Array<DoubleArray>) : PlanarSc
     }
 
     companion object {
-        const val MEMORY_USAGE: Int = 266240
-
-        private fun sectorAverage(sector: Array<DoubleArray>): Double {
-            var sum: Double = 0.0
-            for (i in 0..15) {
-                for (j in 0..15) {
-                    sum += sector[i][j]
-                }
-            }
-            return sum / 256
-        }
+        const val MEMORY_USAGE: Int = 5033
     }
 }

@@ -67,13 +67,13 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
     }
 
     // Gets the value at any given point, with a GeoCoord
-    fun getPoint(point: GeoCoord): Double {
+    fun getPoint(point: GeoCoord): Long {
         val cubicVector: Vector3 = Vector3.fromSphericalCoordinates(point)
         return getPoint(cubicVector)
     }
 
     // Gets the value at any given point, with a Vector3
-    private fun getPoint(cubicVector: Vector3): Double {
+    private fun getPoint(cubicVector: Vector3): Long {
         val largestComponent: Int = cubicVector.largestComponent()
         val largestValue: Double = cubicVector.values[largestComponent]
         val tree: ScalarQuadTree = if (largestValue >= 0) faces[largestComponent * 2] else faces[largestComponent * 2 + 1]
@@ -81,7 +81,7 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
     }
 
     fun interface SphereMutation {
-        fun mutate(point: Vector3, value: Double): Double
+        fun mutate(point: Vector3, value: Long): Long
     }
 
     fun interface SphereApplicationZone {
@@ -100,15 +100,15 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
             // 1 radian is actually very close to the maximum distance from center here, and it's easier on the computer
             if (!zone.checkWithin(faceCenter(i), 1.0)) continue
             // Only mutate if within zone
-            val localOperation = LocalMutator { point: Vector2, value: Double -> operation.mutate(placeFace(point, finalI), value) }
+            val localOperation = LocalMutator { point: Vector2, value: Long -> operation.mutate(placeFace(point, finalI), value) }
             val localZone = ApplicationZone { point: Vector2, range: Double -> zone.checkWithin(placeFace(point, finalI), range) }
             faces[i].mutateLocal(localOperation, localZone, 1.0, Vector2(doubleArrayOf(0.0, 0.0)))
         }
     }
 
     // Input 1 is this, input 2 is inSphere
-    fun biMutate(operator: BiFunction<Double, Double, Double>, inSphere: ScalarSphere) {
-        mutateSphereLocal({ point: Vector3, value: Double -> operator.apply(value, inSphere.getPoint(point)) }, { _: Vector3, _: Double -> true })
+    fun biMutate(operator: BiFunction<Long, Long, Long>, inSphere: ScalarSphere) {
+        mutateSphereLocal({ point: Vector3, value: Long -> operator.apply(value, inSphere.getPoint(point)) }, { _: Vector3, _: Double -> true })
     }
 
     fun exportPng(fileSize: Long) {

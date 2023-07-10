@@ -51,7 +51,7 @@ class ScalarQuadTree {
         return relevantChild(point)!!.getLeafNode(point)
     }
 
-    fun getPoint(point: Vector2): Double {
+    fun getPoint(point: Vector2): Long {
         val terminalNode: ScalarQuadTree = getLeafNode(point)
         return terminalNode.data!!.getPoint(point)
     }
@@ -68,7 +68,7 @@ class ScalarQuadTree {
     }
 
     fun interface LocalMutator {
-        fun mutate(point: Vector2, value: Double): Double
+        fun mutate(point: Vector2, value: Long): Long
     }
 
     fun interface ApplicationZone {
@@ -85,7 +85,7 @@ class ScalarQuadTree {
             return
         }
         if (leafNode) {
-            data!!.mutateLocal { point: Vector2, value: Double ->
+            data!!.mutateLocal { point: Vector2, value: Long ->
                 val x: Double = point.getX() * size + position.getX()
                 val y: Double = point.getY() * size + position.getY()
                 if (x > 1 || y > 1) throw IllegalArgumentException("x or y greater than 1")

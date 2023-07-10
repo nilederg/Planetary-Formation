@@ -18,8 +18,9 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
     // Intentional temp function
     @Throws(IOException::class)
     fun exportFaceSTL(filename: String) {
-        val file = StlFile(filename, " m", "Simulation Project - Export 1/6 of a sphere of terrain in STL format. ")
+        val file = StlFile(filename, " m", "Planetary Formation Testing STL Export")
         faces[0].exportCode({ vec: Vector3 -> vec }, file)
+        file.close()
     }
 
     init {

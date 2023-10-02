@@ -16,12 +16,12 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
     val memory: Long
 
     // Intentional temp function
-    @Throws(IOException::class)
+    /*@Throws(IOException::class)
     fun exportFaceSTL(filename: String) {
         val file = StlFile(filename, " m", "Planetary Formation Testing STL Export")
         faces[0].exportCode({ vec: Vector3 -> vec }, file)
         file.close()
-    }
+    }*/
 
     init {
         memory = (4.0.pow(resolution.toDouble()).toLong()) * PlanarScalarGrid.MEMORY_USAGE * 6
@@ -127,14 +127,16 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
             return value.toLong().toString() + "." + (((value % 1) * (10.0.pow(precision)).toInt() + 0.5).toInt())
         }
 
+        // Returns the coordinate of the center of the specified face (by index in the face array)
+        // TODO: Clean up this odd sextuplet of almost identical cases
         private fun faceCenter(face: Int): Vector3 {
             when (face) {
-                0 -> { return Vector3(doubleArrayOf(-1.0, 0.0, 0.0)) }
-                1 -> { return Vector3(doubleArrayOf( 1.0, 0.0, 0.0)) }
-                2 -> { return Vector3(doubleArrayOf(0.0, -1.0, 0.0)) }
-                3 -> { return Vector3(doubleArrayOf(0.0,  1.0, 0.0)) }
-                4 -> { return Vector3(doubleArrayOf(0.0, 0.0, -1.0)) }
-                5 -> { return Vector3(doubleArrayOf(0.0, 0.0,  1.0)) }
+                0 -> { return Vector3(-1.0, 0.0, 0.0) }
+                1 -> { return Vector3( 1.0, 0.0, 0.0) }
+                2 -> { return Vector3(0.0, -1.0, 0.0) }
+                3 -> { return Vector3(0.0,  1.0, 0.0) }
+                4 -> { return Vector3(0.0, 0.0, -1.0) }
+                5 -> { return Vector3(0.0, 0.0,  1.0) }
             }
             throw IllegalArgumentException("Face must be an integer between 0 and 6.")
         }
@@ -143,12 +145,12 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
         private fun placeFace(point: Vector2, face: Int): Vector3 {
             var location: Vector3? = null
             when (face) {
-                0 -> location = Vector3(doubleArrayOf(-1.0, point.getX() * 2 - 1, point.getY() * 2 - 1))
-                1 -> location = Vector3(doubleArrayOf( 1.0, point.getX() * 2 - 1, point.getY() * 2 - 1))
-                2 -> location = Vector3(doubleArrayOf(point.getX() * 2 - 1, -1.0, point.getY() * 2 - 1))
-                3 -> location = Vector3(doubleArrayOf(point.getX() * 2 - 1,  1.0, point.getY() * 2 - 1))
-                4 -> location = Vector3(doubleArrayOf(point.getX() * 2 - 1, point.getY() * 2 - 1, -1.0))
-                5 -> location = Vector3(doubleArrayOf(point.getX() * 2 - 1, point.getY() * 2 - 1,  1.0))
+                0 -> location = Vector3(-1.0, point.getX() * 2 - 1, point.getY() * 2 - 1)
+                1 -> location = Vector3( 1.0, point.getX() * 2 - 1, point.getY() * 2 - 1)
+                2 -> location = Vector3(point.getX() * 2 - 1, -1.0, point.getY() * 2 - 1)
+                3 -> location = Vector3(point.getX() * 2 - 1,  1.0, point.getY() * 2 - 1)
+                4 -> location = Vector3(point.getX() * 2 - 1, point.getY() * 2 - 1, -1.0)
+                5 -> location = Vector3(point.getX() * 2 - 1, point.getY() * 2 - 1,  1.0)
             }
             location!!.normalize()
             return location

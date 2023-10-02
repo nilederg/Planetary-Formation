@@ -1,7 +1,8 @@
 package storage.positionals
 
-import java.util.function.Function
-
+/**
+ * Index of a square 2-Dimensional array
+ */
 public data class Index(val x: Int, val y: Int) {
     // Rounds to the nearest multiple of an integer and outputs the result (a new Index)
     public fun toNearest(multiple: Int): Index {
@@ -49,6 +50,15 @@ public data class Index(val x: Int, val y: Int) {
                 }
             }
         }
+
+        public fun average(size: Int, function: java.util.function.Function<Index, Long>): Long {
+            var sum = 0L
+            Index.iterate(size) { index: Index ->
+                sum += function.apply(index)
+            }
+            return sum / (size * size)
+        }
+
         public fun fromVector(point: Vector2, size: Int): Index {
             val x: Int = (point.getX() * size).toInt().coerceAtMost(size-1)
             val y: Int = (point.getY() * size).toInt().coerceAtMost(size-1)

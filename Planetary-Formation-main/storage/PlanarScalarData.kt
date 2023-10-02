@@ -6,10 +6,10 @@ import storage.STL.TriangleFace
 import storage.ScalarQuadTree.LocalMutator
 import java.util.function.Function
 
-open interface PlanarScalarData {
+interface PlanarScalarData {
     // TODO: Convert to fixed-point in millimeters
-    open fun getPoint(point: Vector2): Double
-    open fun mutateLocal(operation: LocalMutator)
-    open fun getQuadrant(x: Boolean, y: Boolean): PlanarScalarData
-    open fun exportTriangles(projector: Function<Vector3, Vector3>): Array<TriangleFace>
+    fun getPoint(point: Vector2): Long
+    fun mutateLocal(operation: LocalMutator)
+    fun getQuadrant(x: Boolean, y: Boolean): PlanarScalarData
+    //fun exportTriangles(projector: Function<Vector3, Vector3>): Array<TriangleFace>
 }

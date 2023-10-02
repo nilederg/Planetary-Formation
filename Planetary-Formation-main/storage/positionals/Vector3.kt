@@ -10,6 +10,10 @@ class Vector3 : Vector {
         this.values = values
     }
 
+    constructor(x: Double, y: Double, z: Double) {
+        values = doubleArrayOf(x, y, z)
+    }
+
     // Initialization without value input (overload)
     constructor() {
         values = doubleArrayOf(0.0, 0.0, 0.0)

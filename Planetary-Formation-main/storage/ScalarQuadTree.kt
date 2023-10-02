@@ -9,9 +9,9 @@ import java.util.function.Function
 // A recursive field that stores a grid of scalars
 class ScalarQuadTree {
     private val parent: ScalarQuadTree?
-    private var leafNode: Boolean
     private var children: Array<Array<ScalarQuadTree>>?
     private var data: PlanarScalarData?
+    private var leafNode: Boolean
 
     // Universal node constructor
     internal constructor(parent: ScalarQuadTree?, remainingLevels: Int) {
@@ -19,7 +19,7 @@ class ScalarQuadTree {
             this.parent = parent
             children = null
             leafNode = true
-            data = PlanarScalarGrid(Array(256) { DoubleArray(256) })
+            data = PlanarScalarGrid(Array(64) { LongArray(64) })
             return
         }
         this.parent = parent
@@ -101,7 +101,7 @@ class ScalarQuadTree {
         }
     }
 
-    @Throws(IOException::class)
+    /*@Throws(IOException::class)
     fun exportCode(projector: Function<Vector3, Vector3>, file: StlFile) {
         if (leafNode) {
             file.writeTriangles(data!!.exportTriangles(projector))
@@ -111,5 +111,5 @@ class ScalarQuadTree {
             children!![1][0].exportCode(projector, file)
             children!![1][1].exportCode(projector, file)
         }
-    }
+    }*/
 }

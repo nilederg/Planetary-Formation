@@ -19,7 +19,7 @@ class ScalarQuadTree {
             this.parent = parent
             children = null
             leafNode = true
-            data = PlanarScalarGrid(Array(64) { LongArray(64) })
+            data = PlanarScalarGrid(LongArray(64 * 64))
             return
         }
         this.parent = parent

@@ -6,6 +6,7 @@ import storage.positionals.Index
 import storage.positionals.Vector2
 import storage.positionals.Vector3
 import java.awt.geom.IllegalPathStateException
+import java.util.function.BiFunction
 import java.util.function.Function
 import kotlin.math.absoluteValue
 import kotlin.math.pow
@@ -18,26 +19,23 @@ import kotlin.math.pow
  * More accurate with smoother surfaces
  */
 @OptIn(ExperimentalUnsignedTypes::class)
-class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScalarData {
+class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData {
     // Repeating layers of higher resolution but smaller range hone in on the precise value for each point
     // Floating-point exponents apply to 4x4 sectors of their constituent values, ensuring infinite range
     private var mean: Long                 // 1x1   8B
     private var intExponent: UByte         // 1x1   1B
-    private val intOffsets: IntArray       // 4x4   64B + 12B overhead
-    private val shortExponents: UByteArray // 4x4   16B + 12B overhead
-    private val shortOffsets: ShortArray   // 16x16 512B + 12B overhead
-    private val byteExponents: UByteArray  // 16x16 256B + 12B overhead
-    private val byteOffsets: ByteArray     // 64x64 4096B + 12B overhead
-    //                                              4953B + 60B+20B overhead = 5033B
+    private val intOffsets: IntArray       // 4x4   64B + 20B overhead
+    private val shortExponents: UByteArray // 4x4   16B + 20B overhead
+    private val shortOffsets: ShortArray   // 16x16 512B + 20B overhead
+    private val byteExponents: UByteArray  // 16x16 256B + 20B overhead
+    private val byteOffsets: ByteArray     // 64x64 4096B + 20B overhead
+    //                                              4953B + 100B+20B overhead = 5073B
     // Point = mean + 2^intExponent * intOffset + 2^shortExponent * shortOffset + 2^byteExponent *
     //      : byteOffset
     //      : byteOffset + adjacentByteOffset
     //      : byteOffset + adjacentByteOffset + otherAdjacentByteOffset
 
     init {
-        if (data.size != 64) throw ArrayIndexOutOfBoundsException("Data must be a 64 by 64 array.")
-        if (data[0].size != 64) throw ArrayIndexOutOfBoundsException("Data must be a 64 by 64 array.")
-
         mean = 0L
         intOffsets = IntArray(4*4)
         shortOffsets = ShortArray(16*16)
@@ -45,18 +43,22 @@ class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScal
         intExponent = 0u
         shortExponents = UByteArray(4*4)
         byteExponents = UByteArray(16*16)
+
+        if (data != null) {
+            if (data.size != (64 * 64)) throw ArrayIndexOutOfBoundsException("Data must be a 64 by 64 (one dimensional) array.")
+            set(data)
+        }
     }
 
     // Getting
 
-    // Get one of the offsets at the specified index (size=64)
+    // Get one of the offsets at the specified index (size=4)
     private fun intOffset(point: Index): Long {
-        return (2.0.pow(intExponent.toInt())).toLong() * intOffsets[(point / 16).arrIndex(4)]
+        return intOffsets[point.arrIndex(4)].toLong() shr intExponent.toInt()
     }
 
     private fun shortOffset(point: Index): Long {
-        return ((2.0.pow(shortExponents[(point / 16).arrIndex(4)].toInt())).toLong()
-                * shortOffsets[(point / 4).arrIndex(16)])
+        return shortOffsets[point.arrIndex(16)].toLong() shr shortExponents[(point / 4).arrIndex(4)].toInt()
     }
 
     /*
@@ -67,10 +69,7 @@ class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScal
      */
     private fun byteSummer(point: Index): Short {
         val sectorPos = point % 4
-        val offsetHere = byteOffsets[point.arrIndex(64)]
-        if ((sectorPos.x == 1 || sectorPos.x == 2) &&
-            (sectorPos.y == 1 || sectorPos.y == 2))
-            return offsetHere.toShort()
+        val offsetHere = byteOffsets[point.arrIndex(64)].toShort()
         if (sectorPos.y == 0)
             return (offsetHere + byteSummer(Index(point.x, 1))).toShort()
         if (sectorPos.y == 3)
@@ -79,15 +78,19 @@ class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScal
             return (offsetHere + byteSummer(Index(1, point.y))).toShort()
         if (sectorPos.x == 3)
             return (offsetHere + byteSummer(Index(2, point.y))).toShort()
-        throw IllegalStateException("Unreachable state")
+        return offsetHere
     }
     private fun byteOffset(point: Index): Long {
-        return (2.0.pow(byteExponents[(point / 4).arrIndex(16)].toInt())).toLong() * byteSummer(point)
+        return byteSummer(point).toLong() shr byteExponents[(point / 4).arrIndex(16)].toInt()
+    }
+
+    fun getPoint(point: Index): Long {
+        return byteOffset(point) + shortOffset(point / 4) + intOffset(point / 16) + mean
     }
 
     override fun getPoint(point: Vector2): Long {
         val index = Index.fromVector(point, 64)
-        return byteOffset(index) + shortOffset(index) + intOffset(index) + mean
+        return getPoint(index)
     }
 
     // Setting
@@ -98,6 +101,7 @@ class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScal
      * TODO: Illegible code?????
      */
     fun set(points: LongArray) {
+        val byteValue = LongArray(64*64)
         val shortMean = LongArray(16*16)
         val intMean = LongArray(4*4)
 
@@ -125,7 +129,7 @@ class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScal
         // Calculate int sector exponent
         var maxOffset = 0L
         Index.iterate(4) { intSector: Index ->
-            val offset = mean - intMean[intSector.arrIndex(4)]
+            val offset = intMean[intSector.arrIndex(4)] - mean
             intMean[intSector.arrIndex(4)] = offset
             if (offset.absoluteValue > maxOffset)
                 maxOffset = offset.absoluteValue
@@ -141,7 +145,7 @@ class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScal
             var maxOffset = 0L
             Index.iterate(4) { shortSector: Index ->
                 val position = intSector * 4 + shortSector
-                val offset = mean + intMean[intSector.arrIndex(4)] - shortMean[position.arrIndex(16)]
+                val offset = shortMean[position.arrIndex(16)] - intOffset(intSector) - mean
                 shortMean[position.arrIndex(16)] = offset
                 if (offset.absoluteValue > maxOffset)
                     maxOffset = offset.absoluteValue
@@ -154,13 +158,80 @@ class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScal
             shortOffsets[shortSector.arrIndex(16)] = (shortMean[shortSector.arrIndex(16)] shr shortExponents[(shortSector / 4).arrIndex(4)].toInt()).toShort()
         }
 
+        // bytesummer but for bytevalue instead
+        fun calculateValue (shortSector: Index, byteSector: Index): Long {
+            val bytePosition = shortSector * 4 + byteSector
+            if (byteSector.y == 0) {
+                return calculateValue(shortSector, byteSector + Index(0, 1)) + byteValue[bytePosition.arrIndex(64)]
+            }
+            if (byteSector.y == 3) {
+                return calculateValue(shortSector, byteSector + Index(0, -1)) + byteValue[bytePosition.arrIndex(64)]
+            }
+            if (byteSector.x == 0) {
+                return calculateValue(shortSector, byteSector + Index(1, 0)) + byteValue[bytePosition.arrIndex(64)]
+            }
+            if (byteSector.x == 3) {
+                return calculateValue(shortSector, byteSector + Index(-1, 0)) + byteValue[bytePosition.arrIndex(64)]
+            }
+            return mean + intOffset(shortSector / 4) + shortOffset(shortSector) + byteValue[bytePosition.arrIndex(64)]
+        }
 
+        // Calculate byte offsets
+        // Will the compiler optimize this by removing the loop?
+        Index.iterate(16) { shortSector: Index ->
+            // Calculate core 4 offsets
+            Index.iterate(2) { byteSector: Index ->
+                val bytePosition = shortSector * 4 + 1 + byteSector
+                byteValue[bytePosition.arrIndex(64)] = points[bytePosition.arrIndex(64)] - shortOffset(shortSector) - intOffset(shortSector / 4) - mean
+            }
+            // Calculate left 2 offsets
+            for (y in 1..2) {
+                val byteSector = Index(0, y)
+                val bytePosition = shortSector * 4 + byteSector
+                byteValue[bytePosition.arrIndex(64)] = points[bytePosition.arrIndex(64)] - calculateValue(shortSector, byteSector + Index(1, 0))
+            }
+            // Calculate right 2 offsets
+            for (y in 1..2) {
+                val byteSector = Index(3, y)
+                val bytePosition = shortSector * 4 + byteSector
+                byteValue[bytePosition.arrIndex(64)] = points[bytePosition.arrIndex(64)] - calculateValue(shortSector, byteSector + Index(-1, 0))
+            }
+            // Calculate bottom 4 offsets
+            for (x in 0..3) {
+                val byteSector = Index(x, 0)
+                val bytePosition = shortSector * 4 + byteSector
+                byteValue[bytePosition.arrIndex(64)] = points[bytePosition.arrIndex(64)] - calculateValue(shortSector, byteSector + Index(0, 1))
+            }
+            // Calculate top 4 offsets
+            for (x in 0..3) {
+                val byteSector = Index(x, 3)
+                val bytePosition = shortSector * 4 + byteSector
+                byteValue[bytePosition.arrIndex(64)] = points[bytePosition.arrIndex(64)] - calculateValue(shortSector, byteSector + Index(0, -1))
+            }
+
+            // Calculate exponent
+            var maxOffset = 0L
+            Index.iterate(4) { bytePosition: Index ->
+                if (byteValue[bytePosition.arrIndex(4)].absoluteValue > maxOffset) {
+                    maxOffset = byteValue[bytePosition.arrIndex(4)].absoluteValue
+                }
+            }
+            val byteExponent = (56 - maxOffset.countLeadingZeroBits()).coerceIn(0, 255).toUByte()
+            byteExponents[shortSector.arrIndex(16)] = byteExponent
+
+            // Calculate final offsets
+            // This could likely be made slightly more accurate - idk how though
+            Index.iterate(4) { bytePosition: Index ->
+                val position = shortSector * 4 + bytePosition
+                byteOffsets[position.arrIndex(64)] = (byteValue[position.arrIndex(64)] shr byteExponent.toInt()).toByte()
+            }
+        }
     }
 
     public override fun mutateLocal(operation: LocalMutator) {
         val newVals = LongArray(4096)
         Index.iterate(64) {point: Index ->
-            newVals[point.arrIndex(64)] = operation.mutate(point.toVector(64), byteOffset(point) + shortOffset(point) + intOffset(point) + mean)
+            newVals[point.arrIndex(64)] = operation.mutate(point.toVector(64), byteOffset(point) + shortOffset(point / 4) + intOffset(point / 16) + mean)
         }
         set(newVals)
     }
@@ -168,15 +239,15 @@ class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScal
     public override fun getQuadrant(x: Boolean, y: Boolean): PlanarScalarGrid {
         val xStart: Int = if (x) 0 else 32
         val yStart: Int = if (y) 0 else 32
-        val quadrantData: Array<LongArray> = Array(256) { LongArray(256) }
-        for (i in 0 until 128) {
-            for (j in 0 until 128) {
+        val quadrantData: LongArray = LongArray(64 * 64)
+        for (i in 0 until 32) {
+            for (j in 0 until 32) {
                 val value: Long = getPoint(Vector2(doubleArrayOf((i + xStart).toDouble(), (j + yStart).toDouble())))
                 // @formatter:off
-                quadrantData[i * 2]    [j * 2]     = value
-                quadrantData[i * 2]    [j * 2 + 1] = value
-                quadrantData[i * 2 + 1][j * 2]     = value
-                quadrantData[i * 2 + 1][j * 2 + 1] = value
+                quadrantData[Index(i * 2,     j * 2).arrIndex(64)]     = value
+                quadrantData[Index(i * 2,     j * 2 + 1).arrIndex(64)] = value
+                quadrantData[Index(i * 2 + 1, j * 2).arrIndex(64)]     = value
+                quadrantData[Index(i * 2 + 1, j * 2 + 1).arrIndex(64)] = value
                 // @formatter:on
             }
         }
@@ -203,7 +274,84 @@ class PlanarScalarGrid internal constructor(data: Array<LongArray>) : PlanarScal
         return triangles.requireNoNulls()
     }*/
 
+    public fun print() {
+        for (i in 0..31) {
+            for (j in 0..63) {
+                print(getPoint(Index(i, j)))
+                print(" ")
+            }
+            println()
+        }
+
+        println()
+        println()
+        println()
+
+        for (i in 0..31) {
+            for (j in 0..63) {
+                print(byteOffsets[Index(i, j).arrIndex(64)])
+                print(" ")
+            }
+            println()
+        }
+
+        println()
+        println()
+        println()
+
+        for (i in 0..7) {
+            for (j in 0..15) {
+                print(shortOffsets[Index(i, j).arrIndex(16)])
+                print(" ")
+            }
+            println()
+        }
+
+        println()
+        println()
+        println()
+
+        for (i in 0..3) {
+            for (j in 0..3) {
+                print(intOffsets[Index(i, j).arrIndex(4)])
+                print(" ")
+            }
+            println()
+        }
+
+        println()
+        println()
+        println()
+
+        for (i in 0..7) {
+            for (j in 0..15) {
+                print(byteExponents[Index(i, j).arrIndex(16)])
+                print(" ")
+            }
+            println()
+        }
+
+        println()
+        println()
+        println()
+
+        for (i in 0..3) {
+            for (j in 0..3) {
+                print(shortExponents[Index(i, j).arrIndex(4)])
+                print(" ")
+            }
+            println()
+        }
+
+        println()
+        println()
+        println()
+
+        println(intExponent)
+        println(mean)
+    }
+
     companion object {
-        const val MEMORY_USAGE: Int = 5033
+        const val MEMORY_USAGE: Int = 5073
     }
 }

@@ -67,20 +67,22 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
      * >##<
      * ^^^^
      */
-    private fun byteSummer(point: Index): Short {
+    /*private*/ fun byteSummer(point: Index): Short {
         val sectorPos = point % 4
+        val sectorBase = point - sectorPos
+        //println(sectorPos.toString())
         val offsetHere = byteOffsets[point.arrIndex(64)].toShort()
         if (sectorPos.y == 0)
-            return (offsetHere + byteSummer(Index(point.x, 1))).toShort()
+            return (offsetHere + byteSummer(Index(point.x, sectorBase.y + 1))).toShort()
         if (sectorPos.y == 3)
-            return (offsetHere + byteSummer(Index(point.x, 2))).toShort()
+            return (offsetHere + byteSummer(Index(point.x, sectorBase.y + 2))).toShort()
         if (sectorPos.x == 0)
-            return (offsetHere + byteSummer(Index(1, point.y))).toShort()
+            return (offsetHere + byteSummer(Index(sectorBase.x + 1, point.y))).toShort()
         if (sectorPos.x == 3)
-            return (offsetHere + byteSummer(Index(2, point.y))).toShort()
+            return (offsetHere + byteSummer(Index(sectorBase.x + 2, point.y))).toShort()
         return offsetHere
     }
-    private fun byteOffset(point: Index): Long {
+    /*private*/ fun byteOffset(point: Index): Long {
         return byteSummer(point).toLong() shr byteExponents[(point / 4).arrIndex(16)].toInt()
     }
 
@@ -275,6 +277,7 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
     }*/
 
     public fun print() {
+        println("Values")
         for (i in 0..31) {
             for (j in 0..63) {
                 print(getPoint(Index(i, j)))
@@ -285,7 +288,7 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
 
         println()
         println()
-        println()
+        println("byteOffsets")
 
         for (i in 0..31) {
             for (j in 0..63) {
@@ -297,9 +300,9 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
 
         println()
         println()
-        println()
+        println("shortOffsets")
 
-        for (i in 0..7) {
+        for (i in 0..15) {
             for (j in 0..15) {
                 print(shortOffsets[Index(i, j).arrIndex(16)])
                 print(" ")
@@ -309,7 +312,7 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
 
         println()
         println()
-        println()
+        println("intOffsets")
 
         for (i in 0..3) {
             for (j in 0..3) {
@@ -321,9 +324,9 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
 
         println()
         println()
-        println()
+        println("byteExponents")
 
-        for (i in 0..7) {
+        for (i in 0..15) {
             for (j in 0..15) {
                 print(byteExponents[Index(i, j).arrIndex(16)])
                 print(" ")
@@ -333,7 +336,7 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
 
         println()
         println()
-        println()
+        println("shortExponents")
 
         for (i in 0..3) {
             for (j in 0..3) {
@@ -345,9 +348,11 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
 
         println()
         println()
-        println()
+        println("intExponents")
 
         println(intExponent)
+        println()
+        println("mean")
         println(mean)
     }
 

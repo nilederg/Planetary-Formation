@@ -4,6 +4,7 @@ import storage.STL.StlFile
 import storage.ScalarQuadTree.ApplicationZone
 import storage.ScalarQuadTree.LocalMutator
 import storage.positionals.GeoCoord
+import storage.positionals.Noise3
 import storage.positionals.Vector2
 import storage.positionals.Vector3
 import java.io.IOException
@@ -109,6 +110,32 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
     // Input 1 is this, input 2 is inSphere
     fun biMutate(operator: BiFunction<Long, Long, Long>, inSphere: ScalarSphere) {
         mutateSphereLocal({ point: Vector3, value: Long -> operator.apply(value, inSphere.getPoint(point)) }, { _: Vector3, _: Double -> true })
+    }
+
+    fun initFractalNoise(scale: Int, depth: Int, magnitude: Double) {
+        println("Generating fractal noise...")
+        val layers: Array<Noise3> = Array(depth - scale) { i ->
+            val freq: Int = 1 + 2.0.pow((i + scale).toDouble()).toInt()
+            val layer = Noise3(intArrayOf(freq, freq, freq))
+            layer.randomize()
+            return@Array layer
+        }
+        println("Fractal noise generated")
+        println("Filling sphere with noise...")
+        mutateSphereLocal({ point: Vector3, _: Long ->
+            val adjustedPoint: Vector3 = point.clone()
+            adjustedPoint.scale(0.5)
+            adjustedPoint.add(Vector3(doubleArrayOf(0.5, 0.5, 0.5)))
+            var sum = 0.0
+            for (i in layers.indices) {
+                val layer: Noise3 = layers[i]
+                val layerPoint: Vector3 = adjustedPoint.clone()
+                layerPoint.scale((layer.dimensions[0] - 1).toDouble())
+                sum += layer.getPoint(layerPoint) * 0.5.pow(i.toDouble())
+            }
+            return@mutateSphereLocal (sum * magnitude).toLong()
+        }, { _: Vector3, _: Double -> true })
+        println("Sphere randomized with fractal noise")
     }
 
     fun exportPng(fileSize: Long) {

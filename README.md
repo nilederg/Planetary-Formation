@@ -11,4 +11,6 @@ Planned features:
     * Asteroid collisions
     * Tectonic plates
     * Rainfall erosion
+    * Soil variance
+    * Wind erosion
     * More in later updates

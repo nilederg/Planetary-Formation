@@ -67,7 +67,7 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
      * >##<
      * ^^^^
      */
-    /*private*/ fun byteSummer(point: Index): Short {
+    fun byteSummer(point: Index): Short {
         val sectorPos = point % 4
         val sectorBase = point - sectorPos
         //println(sectorPos.toString())
@@ -82,7 +82,7 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
             return (offsetHere + byteSummer(Index(sectorBase.x + 2, point.y))).toShort()
         return offsetHere
     }
-    /*private*/ fun byteOffset(point: Index): Long {
+    fun byteOffset(point: Index): Long {
         return byteSummer(point).toLong() shr byteExponents[(point / 4).arrIndex(16)].toInt()
     }
 
@@ -254,6 +254,24 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
             }
         }
         return PlanarScalarGrid(quadrantData)
+    }
+
+    public override fun getValues(): LongArray {
+        val values = LongArray(64 * 64)
+
+        Index.iterate(4) {intSector: Index ->
+            val intSectorSum = mean + intOffset(intSector)
+            Index.iterate(4) {shortSector: Index ->
+                val shortSectorSum = intSectorSum + shortOffset(intSector + shortSector * 4)
+                Index.iterate(4) {bytePosition: Index ->
+                    val position = intSector * 16 + shortSector * 4 + bytePosition
+                    val totalValue = shortSectorSum + byteSummer(position)
+                    values[position.arrIndex(64)] = totalValue
+                }
+            }
+        }
+
+        return values
     }
 
     /*public override fun exportTriangles(projector: Function<Vector3, Vector3>): Array<TriangleFace> {

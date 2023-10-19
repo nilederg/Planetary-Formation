@@ -22,4 +22,9 @@ class TerrestrialPlanet internal constructor(resolution: Int, maxRAM: Long) {
     fun launchAsteroid(point: GeoCoord, mass: Double, speed: Double) {
 
     }
+
+    //
+    fun rainfall(magnitude: Double, rounds: Int) {
+
+    }
 }

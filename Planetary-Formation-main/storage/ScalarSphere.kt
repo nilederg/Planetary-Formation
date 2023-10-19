@@ -91,6 +91,11 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
         fun checkWithin(point: Vector3, range: Double): Boolean
     }
 
+    fun interface PointEvaluator {
+        // is this a closure ???!?!?!!!!?!?!???!??!?!?
+        fun evaluate(point: Vector3, value: Long)
+    }
+
     // Evaluates a lambda, mutating the value at every point on the sphere
     // Lambda takes in its own geographic position and outputs its new value
     // Efficiency improved by only running on necessary regions with ApplicationZone
@@ -107,17 +112,33 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
         }
     }
 
+    fun evaluateNearby(operation: PointEvaluator, zone: SphereApplicationZone) {
+        for (i in 0..5) {
+            val finalI: Int = i
+            println("Evaluating face $i")
+            // 1 radian is actually very close to the maximum distance from center here, and it's easier on the computer
+            if (!zone.checkWithin(faceCenter(i), 1.0)) continue
+            // Only mutate if within zone
+            val localOperation = PointEvaluator { point: Vector2, value: Long -> operation.evaluate(placeFace(point, finalI), value) }
+            val localZone = ApplicationZone { point: Vector2, range: Double -> zone.checkWithin(placeFace(point, finalI), range) }
+            faces[i].evaluateLocal(localOperation, localZone, 1.0, Vector2(doubleArrayOf(0.0, 0.0)))
+        }
+    }
+
     // Input 1 is this, input 2 is inSphere
     fun biMutate(operator: BiFunction<Long, Long, Long>, inSphere: ScalarSphere) {
         mutateSphereLocal({ point: Vector3, value: Long -> operator.apply(value, inSphere.getPoint(point)) }, { _: Vector3, _: Double -> true })
     }
 
+
+    // Scale: Minimum frequency (no details larger than this)
+    // Depth: Maximum frequency (no details smaller than this)
     fun initFractalNoise(scale: Int, depth: Int, magnitude: Double) {
         println("Generating fractal noise...")
         val layers: Array<Noise3> = Array(depth - scale) { i ->
             val freq: Int = 1 + 2.0.pow((i + scale).toDouble()).toInt()
             val layer = Noise3(intArrayOf(freq, freq, freq))
-            layer.randomize()
+            layer.randomizeSphere()
             return@Array layer
         }
         println("Fractal noise generated")

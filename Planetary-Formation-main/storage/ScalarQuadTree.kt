@@ -77,6 +77,10 @@ class ScalarQuadTree {
         fun checkWithin(point: Vector2, range: Double): Boolean
     }
 
+    fun interface PointEvaluator {
+        fun evaluate(point: Vector2, value: Long)
+    }
+
     // Operation is applied to every point within zone
     fun mutateLocal(operation: LocalMutator, zone: ApplicationZone, size: Double, position: Vector2) {
         // Don't bother with it if not in the zone
@@ -86,6 +90,29 @@ class ScalarQuadTree {
         }
         if (leafNode) {
             data!!.mutateLocal { point: Vector2, value: Long ->
+                val x: Double = point.getX() * size + position.getX()
+                val y: Double = point.getY() * size + position.getY()
+                if (x > 1 || y > 1) throw IllegalArgumentException("x or y greater than 1")
+                operation.mutate(Vector2(doubleArrayOf(x, y)), value)
+            }
+        } else {
+            for (i in 0..1) {
+                for (j in 0..1) {
+                    val offset = Vector2(doubleArrayOf(size * i / 2, size * j / 2))
+                    children!![i][j].mutateLocal(operation, zone, size / 2, Vector2.sum(position, offset))
+                }
+            }
+        }
+    }
+
+    fun evaluateLocal(operation: PointEvaluator, zone: ApplicationZone, size: Double, position: Vector2) {
+        // Don't bother with it if not in the zone
+        if (!zone.checkWithin(Vector2.sum(position, Vector2(doubleArrayOf(size / 2, size / 2))), size)) {
+            println(position.getX().toString() + " " + position.getY() + ", " + "Skipped at " + size)
+            return
+        }
+        if (leafNode) {
+            data!!.evaluateLocal { point: Vector2, value: Long ->
                 val x: Double = point.getX() * size + position.getX()
                 val y: Double = point.getY() * size + position.getY()
                 if (x > 1 || y > 1) throw IllegalArgumentException("x or y greater than 1")

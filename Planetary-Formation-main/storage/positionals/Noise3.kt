@@ -20,7 +20,39 @@ class Noise3 constructor(dims: IntArray?) {
     fun randomize() {
         // i wonder if there's a way to get rid of redundant recursive similar for loops
         // without using something crazy like lambdas
-        for (x in 0 until dimensions[0]) for (y in 0 until dimensions[1]) for (z in 0 until dimensions[2]) vectors[x][y][z].randomizeUnit()
+        for (x in 0 until dimensions[0]) {
+            for (y in 0 until dimensions[1]) {
+                for (z in 0 until dimensions[2]) {
+                    vectors[x][y][z].randomizeUnit()
+                }
+            }
+        }
+    }
+
+    // Randomizes only the relevant vectors for sampling a sphere.
+    fun randomizeSphere() {
+        if (dimensions[0] != dimensions[1] || dimensions[1] != dimensions[2]) {
+            throw IllegalStateException("Noise field is not cubical.")
+        }
+        val applicableDistance = 3.0 / dimensions[0] // 3 is a wild guess
+        val maximumDist = 1 + applicableDistance
+        val minimumDist = 1 - applicableDistance
+        for (x in 0 until dimensions[0]) {
+            for (y in 0 until dimensions[1]) {
+                val xf = (2 * x.toDouble() / dimensions[0]) - 1
+                val yf = (2 * y.toDouble() / dimensions[1]) - 1
+                // We can skip if its outside the cylinder to save time even checking z
+                val dist = Math.sqrt((xf * xf) + (yf * yf))
+                if (dist > maximumDist) {continue}
+                for (z in 0 until dimensions[2]) {
+                    val zf = (2 * z.toDouble() / dimensions[2]) - 1
+                    // check if it's close to the sphere
+                    val dist = Math.sqrt((xf * xf) + (yf * yf) + (zf * zf))
+                    if (dist > maximumDist || dist < minimumDist) {continue}
+                    vectors[x][y][z].randomizeUnit()
+                }
+            }
+        }
     }
 
     // Calculates dot product between single internal vector and relative input

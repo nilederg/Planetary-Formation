@@ -232,10 +232,18 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
 
     public override fun mutateLocal(operation: LocalMutator) {
         val newVals = LongArray(4096)
+        val oldVals = getValues()
         Index.iterate(64) {point: Index ->
-            newVals[point.arrIndex(64)] = operation.mutate(point.toVector(64), byteOffset(point) + shortOffset(point / 4) + intOffset(point / 16) + mean)
+            newVals[point.arrIndex(64)] = operation.mutate(point.toVector(64), oldVals[point.arrIndex(64)])
         }
         set(newVals)
+    }
+
+    public override fun evaluateLocal(operation: ScalarQuadTree.PointEvaluator) {
+        val oldVals = getValues()
+        Index.iterate(64) {point: Index ->
+            operation.evaluate(point.toVector(64), oldVals[point.arrIndex(64)])
+        }
     }
 
     public override fun getQuadrant(x: Boolean, y: Boolean): PlanarScalarGrid {

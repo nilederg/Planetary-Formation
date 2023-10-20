@@ -239,7 +239,7 @@ class PlanarScalarGrid internal constructor(data: LongArray?) : PlanarScalarData
         set(newVals)
     }
 
-    public override fun evaluateLocal(operation: ScalarQuadTree.PointEvaluator) {
+    public override fun evaluateLocal(operation: ScalarQuadTree.LocalEvaluator) {
         val oldVals = getValues()
         Index.iterate(64) {point: Index ->
             operation.evaluate(point.toVector(64), oldVals[point.arrIndex(64)])

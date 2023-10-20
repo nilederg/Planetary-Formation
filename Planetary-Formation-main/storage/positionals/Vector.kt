@@ -85,7 +85,7 @@ abstract class Vector constructor() {
     }
 
     // Normalize to cube
-    // Scale so that end of vector touches a face of a cube with edge length 2 (radius 1)
+    // Scale so that end of vector touches a face of a cube with edge length 2 (apothem 1)
     fun normalizeCube() {
         val factor: Double = 1 / values[largestComponent()]
         scale(factor)

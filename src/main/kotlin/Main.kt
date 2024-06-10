@@ -7,7 +7,7 @@ import kotlin.math.absoluteValue
 
 fun main(args: Array<String>) {
     val planet = TerrestrialPlanet(4, 10000000000L)
-    planet.initFractalNoise(5, 7, 100.0)
+    planet.initFractalNoise(1, 1, 100.0)
     println(planet.terrain.getPoint(GeoCoord(Math.toRadians(40.0), Math.toRadians(20.0))))
     println(planet.terrain.getPoint(GeoCoord(Math.toRadians(40.0), Math.toRadians(21.0))))
     println(planet.terrain.getPoint(GeoCoord(Math.toRadians(90.0), Math.toRadians(128.0))))

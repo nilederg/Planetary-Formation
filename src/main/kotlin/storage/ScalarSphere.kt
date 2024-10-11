@@ -112,9 +112,15 @@ class ScalarSphere constructor(resolution: Int, maxRAM: Long) {
         mutateSphereLocal({ point: Vector3, value: Long -> operator.apply(value, inSphere.getPoint(point)) }, { _: Vector3, _: Double -> true })
     }
 
+    /**
+     * Fills the sphere with perlin noise
+     *
+     * @param scale The lowest frequency (largest features) that will be generated. Must be less than or equal to depth.
+     * @param depth The highest frequency (smallest features) that will be generated. Must be greater than or equal to scale.
+     */
     fun initFractalNoise(scale: Int, depth: Int, magnitude: Double) {
         println("Generating fractal noise...")
-        val layers: Array<Noise3> = Array(depth - scale) { i ->
+        val layers: Array<Noise3> = Array(1 + depth - scale) { i ->
             val freq: Int = 1 + 2.0.pow((i + scale).toDouble()).toInt()
             val layer = Noise3(intArrayOf(freq, freq, freq))
             layer.randomize()

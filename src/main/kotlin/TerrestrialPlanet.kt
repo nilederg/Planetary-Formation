@@ -13,7 +13,12 @@ class TerrestrialPlanet internal constructor(resolution: Int, maxRAM: Long) {
         terrain = ScalarSphere(resolution, maxRAM)
     }
 
-    // Scale is the lowest frequency, depth is the highest
+    /**
+     * Fills the planet's terrain with perlin noise
+     *
+     * @param scale The lowest frequency (largest features) that will be generated. Must be less than or equal to depth.
+     * @param depth The highest frequency (smallest features) that will be generated. Must be greater than or equal to scale.
+     */
     fun initFractalNoise(scale: Int, depth: Int, magnitude: Double) {
         terrain.initFractalNoise(scale, depth, magnitude)
     }

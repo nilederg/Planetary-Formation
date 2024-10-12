@@ -1,38 +1,24 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm") version "2.0.20" // Use your Kotlin version
+    application // Add this plugin for easy execution
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+application {
+    mainClass.set("MainKt") // Since there's no package, just use "Main"
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.10.2"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation(kotlin("stdlib"))
 }
 
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "MainKt" // Again, since there's no package
     }
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }
 
-tasks.withType<JavaCompile>().configureEach {
-    options.release.set(8)
-}
-
-// config JVM target to 1.8 for kotlin compilation tasks
-tasks.withType<KotlinCompile>().configureEach {
-    kotlinOptions.jvmTarget = "1.8"
-}
-
-kotlin {
-    jvmToolchain(17)
-}

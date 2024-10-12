@@ -5,9 +5,9 @@ import java.io.IOException
 import java.util.*
 import kotlin.math.absoluteValue
 
-fun main(args: Array<String>) {
-    val planet = TerrestrialPlanet(9, 8000000000L)
-    planet.initFractalNoise(4, 6, 1000000000.0)
+fun main() {
+    val planet = TerrestrialPlanet(6, 48000000000L)
+    planet.initFractalNoise(3, 8, 10000000000.0)
     println(planet.terrain.getPoint(GeoCoord(Math.toRadians(40.0), Math.toRadians(20.0))))
     println(planet.terrain.getPoint(GeoCoord(Math.toRadians(40.0), Math.toRadians(21.0))))
     println(planet.terrain.getPoint(GeoCoord(Math.toRadians(40.0), Math.toRadians(24.0))))
